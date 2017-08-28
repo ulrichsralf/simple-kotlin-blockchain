@@ -8,12 +8,12 @@ import java.util.*
 data class Address(
 
         @PrimaryKey("id")
-        var id: UUID? = null,
+        var id: String? = null,
 
         /**
          * The public key for this Address to ensure everybody is able to verify signed messages
          */
-        var publicKey: ByteArray? = null) {
+        var publicKey: String? = null) {
 
     override fun equals(o: Any?) = this === o || o is Address && id == o.id
     override fun hashCode() = id!!.hashCode()

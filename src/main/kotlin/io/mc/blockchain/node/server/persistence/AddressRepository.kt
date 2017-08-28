@@ -7,4 +7,4 @@ import java.util.*
  * @author Ralf Ulrich
  * 27.08.17
  */
-interface AddressRepository : CrudRepository<Address, UUID>
+interface AddressRepository : CrudRepository<Address, String>

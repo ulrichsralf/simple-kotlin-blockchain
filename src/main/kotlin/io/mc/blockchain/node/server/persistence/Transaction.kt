@@ -18,12 +18,12 @@ data class Transaction(
         /**
          * The hash of the address which is responsible for this Transaction
          */
-        var senderId: UUID? = null,
+        var senderId: String? = null,
 
         /**
          * Signature of text which can be verified with publicKey of sender address
          */
-        var signature: ByteArray? = null,
+        var signature: String? = null,
 
         /**
          * Creation time of this Transaction

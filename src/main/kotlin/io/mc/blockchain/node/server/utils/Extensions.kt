@@ -13,6 +13,8 @@ import java.util.*
 fun Any.getLogger() = LoggerFactory.getLogger(javaClass)
 
 fun ByteArray.encodeBase64String() = BaseEncoding.base64().encode(this)
+fun ByteArray.toHexString(): String = BaseEncoding.base16().encode(this)
+fun String.bytesFromHex(): ByteArray = BaseEncoding.base16().decode(this)
 
 
 fun UUID.toByteArray() = ByteBuffer.allocate(16).putLong(mostSignificantBits).putLong(leastSignificantBits).array()

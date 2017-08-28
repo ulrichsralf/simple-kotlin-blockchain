@@ -22,9 +22,10 @@ constructor(val blockService: BlockService,
      * Retrieve all Blocks in order of mine date, also known as Blockchain
      * @return JSON list of Blocks
      */
-    internal val blockchain: List<Block>
-        @RequestMapping
-        get() = blockService.blockchain
+    @RequestMapping
+    fun  blockchain() : List<Block>{
+        return blockService.getBlockchain()
+    }
 
     /**
      * Add a new Block at the end of the Blockchain.
@@ -36,7 +37,7 @@ constructor(val blockService: BlockService,
      */
     @RequestMapping(method = arrayOf(RequestMethod.PUT))
     internal fun addBlock(@RequestBody block: Block, @RequestParam(required = false) publish: Boolean?, response: HttpServletResponse) {
-        LOG.info("Add block " + block.hash!!.encodeBase64String())
+        LOG.info("Add block " + block.hash!!)
         val success = blockService.append(block)
 
         if (success) {

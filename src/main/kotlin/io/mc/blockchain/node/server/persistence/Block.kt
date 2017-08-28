@@ -1,8 +1,12 @@
 package io.mc.blockchain.node.server.persistence
 
 import com.google.common.primitives.Longs
+import io.mc.blockchain.node.server.utils.bytesFromHex
+import io.mc.blockchain.node.server.utils.toHexString
 import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.cassandra.core.PrimaryKeyType
 import org.springframework.data.cassandra.mapping.PrimaryKey
+import org.springframework.data.cassandra.mapping.PrimaryKeyColumn
 import org.springframework.data.cassandra.mapping.Table
 import java.util.*
 
@@ -11,51 +15,43 @@ import java.util.*
  * 27.08.17
  */
 @Table(value = "blockchain")
-data class Block(@PrimaryKey("id") var id: UUID? = UUID.randomUUID(),
-                 var previousBlockHash: ByteArray? = null,
+data class Block(var version: Long? = 1L,
+                 var previousBlockHash: String? = null,
                  var transactions: List<Transaction>? = null,
-                 var tries: Long? = null,
+                 var nonce: Long? = null,
                  var timestamp: Long? = System.currentTimeMillis(),
-                 var merkleRoot: ByteArray? = transactions?.calculateMerkleRoot(),
-                 var hash: ByteArray? = calculateHash(previousBlockHash!!, merkleRoot!!, tries!!, timestamp!!)) {
+                 var merkleRoot: String? = transactions?.calculateMerkleRoot(),
+                 @PrimaryKeyColumn(name = "partition", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
+                 var partition: Long? = null,
+                 @PrimaryKeyColumn(name = "hash", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+                 var hash: String? = calculateHash(previousBlockHash!!.bytesFromHex(), merkleRoot!!.bytesFromHex(), nonce!!, timestamp!!)) {
 
-    override fun equals(o: Any?) = this === o || o is Block && Arrays.equals(hash, o.hash)
-    override fun hashCode() = Arrays.hashCode(hash)
+    override fun equals(o: Any?) = this === o || o is Block && hash == o.hash
+    override fun hashCode() = hash!!.hashCode()
 }
 
 
-/**
- * Calculates the Hash of all transactions as hash tree.
- * https://en.wikipedia.org/wiki/Merkle_tree
- * @return SHA256-hash as raw bytes
- */
-fun List<Transaction>.calculateMerkleRoot(): ByteArray {
-    val hashQueue = LinkedList<ByteArray>(this.map { it.signature })
+fun List<Transaction>.calculateMerkleRoot(): String {
+    val hashQueue = LinkedList<ByteArray>(this.map { it.signature?.bytesFromHex() })
     while (hashQueue.size > 1) {
         // take 2 hashes from queue
         val hashableData = hashQueue.poll() + hashQueue.poll()
         // put new hash at end of queue
         hashQueue.add(DigestUtils.sha256(hashableData))
     }
-    return hashQueue.poll()
+    return hashQueue.poll().toHexString()
 }
 
-
-/**
- * Calculates the hash using relevant fields of this type
- * @return SHA256-hash as raw bytes
- */
-fun calculateHash(previousBlockHash: ByteArray, merkleRoot: ByteArray, tries: Long, timestamp: Long): ByteArray {
+fun calculateHash(previousBlockHash: ByteArray, merkleRoot: ByteArray, nonce: Long, timestamp: Long): String {
     var hashableData = previousBlockHash + merkleRoot
-    hashableData += Longs.toByteArray(tries)
+    hashableData += Longs.toByteArray(nonce)
     hashableData += Longs.toByteArray(timestamp)
-    return DigestUtils.sha256(hashableData)
+    return DigestUtils.sha256Hex(hashableData)
 }
 
 
 /**
  * Count the number of bytes in the hash, which are zero at the beginning
- * @return int number of leading zeros
  */
 fun ByteArray.getLeadingZerosCount(): Int {
     for (i in 0 until size) {

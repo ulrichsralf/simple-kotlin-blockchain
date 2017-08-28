@@ -4,6 +4,7 @@ package io.mc.blockchain.node.server.service
 import io.mc.blockchain.node.server.persistence.Block
 import io.mc.blockchain.node.server.persistence.Transaction
 import io.mc.blockchain.node.server.persistence.getLeadingZerosCount
+import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -46,7 +47,7 @@ constructor(private val transactionService: TransactionService, private val bloc
             val block = mineBlock()
             if (block != null) {
                 // Found block! Append and publish
-                LOG.info("Mined block with " + block.transactions!!.size + " transactions and nonce " + block.tries)
+                LOG.info("Mined block with " + block.transactions!!.size + " transactions and nonce " + block.nonce)
                 blockService.append(block)
                 // TODO nodeService.broadcastPut("block", block)
             }
@@ -58,7 +59,7 @@ constructor(private val transactionService: TransactionService, private val bloc
         var tries: Long = 0
 
         // get previous hash and transactions
-        val previousBlockHash: ByteArray? = blockService.lastBlock?.hash
+        val previousBlockHash: String? = blockService.lastBlock()?.hash
         val transactions = transactionService.getTransactionPool().take(Config.MAX_TRANSACTIONS_PER_BLOCK)
 
 
@@ -75,8 +76,8 @@ constructor(private val transactionService: TransactionService, private val bloc
 
         // try new block until difficulty is sufficient
         while (runMiner.get()) {
-            val block = Block(previousBlockHash = previousBlockHash, transactions = transactions, tries = tries)
-            if (block.hash!!.getLeadingZerosCount() >= Config.DIFFICULTY) {
+            val block = Block(previousBlockHash = previousBlockHash, transactions = transactions, nonce = tries)
+            if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) {
                 return block
             }
             tries++

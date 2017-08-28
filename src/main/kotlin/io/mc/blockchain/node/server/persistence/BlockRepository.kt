@@ -7,4 +7,4 @@ import java.util.*
  * @author Ralf Ulrich
  * 27.08.17
  */
-interface BlockRepository : CrudRepository<Block, UUID>
+interface BlockRepository : CrudRepository<Block, String>

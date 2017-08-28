@@ -5,6 +5,7 @@ import io.mc.blockchain.node.server.persistence.AddressRepository
 import io.mc.blockchain.node.server.persistence.Transaction
 import io.mc.blockchain.node.server.persistence.TransactionRepository
 import io.mc.blockchain.node.server.utils.SignatureUtils
+import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.encodeBase64String
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +57,7 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
         }
 
         try {
-            if (!SignatureUtils.verify(transaction , sender.publicKey!!)) {
+            if (!SignatureUtils.verify(transaction , sender.publicKey!!.bytesFromHex())) {
                 LOG.warn("Invalid signature")
                 return false
             }

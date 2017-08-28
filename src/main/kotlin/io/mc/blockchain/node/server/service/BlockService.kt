@@ -2,10 +2,10 @@ package io.mc.blockchain.node.server.service
 
 
 import io.mc.blockchain.node.server.persistence.*
+import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
 import java.util.*
 
 
@@ -17,7 +17,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
 
 
     fun getBlockchain(): List<Block> {
-        return blockRepository.findAll().toList()
+        return blockRepository.findAll().toList().sortedBy { it.partition }
     }
 
     /**
@@ -25,10 +25,9 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
      *
      * @return Last Block in chain
      */
-    val lastBlock: Block?
-        get() = if (blockchain.isEmpty()) {
-            null
-        } else blockchain[blockchain.size - 1]
+    fun lastBlock(): Block? {
+        return getBlockchain().lastOrNull()
+    }
 
     /**
      * Append a new Block at the end of chain
@@ -39,8 +38,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
     @Synchronized
     fun append(block: Block): Boolean {
         if (verify(block)) {
-            blockchain.add(block)
-
+            blockRepository.save(block)
             // remove transactions from pool
             block.transactions!!.forEach({ transactionService.remove(it) })
             return true
@@ -48,37 +46,19 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
         return false
     }
 
-    /**
-     * Download Blocks from other Node and them to the blockchain
-     *
-     * @param node         Node to query
-     * @param restTemplate RestTemplate to use
-     */
-    fun retrieveBlockchain(node: Node, restTemplate: RestTemplate) {
-        val blocks = restTemplate.getForObject(node.address.toString() + "/block", Array<Block>::class.java)
-        Collections.addAll(blockchain, *blocks)
-        LOG.info("Retrieved " + blocks.size + " blocks from node " + node.address)
-    }
-
 
     private fun verify(block: Block): Boolean {
         // references last block in chain
-        if (blockchain.size > 0) {
-            val lastBlockInChainHash = lastBlock!!.hash
-            if (!Arrays.equals(block.previousBlockHash, lastBlockInChainHash)) {
-                return false
-            }
-        } else {
-            if (block.previousBlockHash != null) {
-                return false
-            }
+        val lastBlockInChainHash = lastBlock()?.hash
+        if (block.previousBlockHash != lastBlockInChainHash) {
+            return false
         }
 
         // correct hashes
-        if (!Arrays.equals(block.merkleRoot, block.transactions!!.calculateMerkleRoot())) {
+        if (block.merkleRoot == block.transactions!!.calculateMerkleRoot()) {
             return false
         }
-        if (!Arrays.equals(block.hash, calculateHash(block.previousBlockHash!!, block.merkleRoot!!, block.tries!!, block.timestamp!!))) {
+        if (block.hash !=calculateHash(block.previousBlockHash!!.bytesFromHex(), block.merkleRoot!!.bytesFromHex(), block.nonce!!, block.timestamp!!)) {
             return false
         }
 
@@ -89,7 +69,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
 
         // all transactions in pool
         // considered difficulty
-        return transactionService.containsAll(block.transactions!!) && block.hash!!.getLeadingZerosCount() >= Config.DIFFICULTY
+        return transactionService.containsAll(block.transactions!!) && block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY
 
     }
 
