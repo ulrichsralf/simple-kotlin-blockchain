@@ -5,6 +5,7 @@ import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.toHexString
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.cassandra.core.PrimaryKeyType
+import org.springframework.data.annotation.Transient
 import org.springframework.data.cassandra.mapping.PrimaryKey
 import org.springframework.data.cassandra.mapping.PrimaryKeyColumn
 import org.springframework.data.cassandra.mapping.Table
@@ -17,7 +18,7 @@ import java.util.*
 @Table(value = "blockchain")
 data class Block(var version: Long? = 1L,
                  var previousBlockHash: String? = null,
-                 var transactions: List<Transaction>? = null,
+                 var transactions: List<String>? = null,
                  var nonce: Long? = null,
                  var timestamp: Long? = System.currentTimeMillis(),
                  var merkleRoot: String? = transactions?.calculateMerkleRoot(),
@@ -31,8 +32,8 @@ data class Block(var version: Long? = 1L,
 }
 
 
-fun List<Transaction>.calculateMerkleRoot(): String {
-    val hashQueue = LinkedList<ByteArray>(this.map { it.signature?.bytesFromHex() })
+fun List<String>.calculateMerkleRoot(): String {
+    val hashQueue = LinkedList<ByteArray>(this.map { Transaction.fromJsonString(it).signature?.bytesFromHex() })
     while (hashQueue.size > 1) {
         // take 2 hashes from queue
         val hashableData = hashQueue.poll() + hashQueue.poll()

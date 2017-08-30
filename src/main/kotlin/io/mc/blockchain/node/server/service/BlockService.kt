@@ -40,7 +40,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
         if (verify(block)) {
             blockRepository.save(block)
             // remove transactions from pool
-            block.transactions!!.forEach({ transactionService.remove(it) })
+            block.transactions!!.forEach({ transactionService.remove(Transaction.fromJsonString(it)) })
             return true
         }
         return false
@@ -69,7 +69,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
 
         // all transactions in pool
         // considered difficulty
-        return transactionService.containsAll(block.transactions!!) && block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY
+        return transactionService.containsAll(block.transactions!!.map { Transaction.fromJsonString(it) }) && block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY
 
     }
 

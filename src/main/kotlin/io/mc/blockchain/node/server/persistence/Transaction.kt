@@ -2,6 +2,7 @@ package io.mc.blockchain.node.server.persistence
 
 
 import com.datastax.driver.core.utils.UUIDs
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.mc.blockchain.node.server.utils.toByteArray
 import java.util.*
 
@@ -36,5 +37,15 @@ data class Transaction(
 
     fun getSignData(): ByteArray {
         return id!!.toByteArray() + text!!.toByteArray() + senderId!!.toByteArray() + timestamp!!.toByteArray()
+    }
+
+    fun toJsonString(): String {
+        return ObjectMapper().writeValueAsString(this)
+    }
+
+    companion object {
+        fun fromJsonString(transaction: String): Transaction{
+            return ObjectMapper().readValue(transaction,Transaction::class.java)
+        }
     }
 }

@@ -2,16 +2,12 @@ package io.mc.blockchain.node.server.service
 
 
 import io.mc.blockchain.node.server.persistence.Block
-import io.mc.blockchain.node.server.persistence.Transaction
 import io.mc.blockchain.node.server.persistence.getLeadingZerosCount
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.stream.Collectors
 
 @Service
 class MiningService @Autowired
@@ -76,7 +72,7 @@ constructor(private val transactionService: TransactionService, private val bloc
 
         // try new block until difficulty is sufficient
         while (runMiner.get()) {
-            val block = Block(previousBlockHash = previousBlockHash, transactions = transactions, nonce = tries)
+            val block = Block(previousBlockHash = previousBlockHash, transactions = transactions.map { it.toJsonString() }, nonce = tries)
             if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) {
                 return block
             }
