@@ -1,10 +1,9 @@
 package io.mc.blockchain.node.server.persistence
 
 import org.springframework.data.repository.CrudRepository
-import java.util.*
 
 /**
  * @author Ralf Ulrich
  * 27.08.17
  */
-interface TransactionRepository : CrudRepository<Transaction, UUID>
+interface TransactionRepository : CrudRepository<Transaction, String>

@@ -6,11 +6,9 @@ import io.mc.blockchain.node.server.persistence.Transaction
 import io.mc.blockchain.node.server.persistence.TransactionRepository
 import io.mc.blockchain.node.server.utils.SignatureUtils
 import io.mc.blockchain.node.server.utils.bytesFromHex
-import io.mc.blockchain.node.server.utils.encodeBase64String
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.*
 
 
 @Service
@@ -45,7 +43,7 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
      * @return true if all Transactions are member of the pool
      */
     fun containsAll(transactions: Collection<Transaction>): Boolean {
-        return transactions.all{ transactionRepository.exists(it.id) }
+        return transactions.all { transactionRepository.exists(it.id) }
     }
 
     private fun verify(transaction: Transaction): Boolean {
@@ -57,7 +55,7 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
         }
 
         try {
-            if (!SignatureUtils.verify(transaction , sender.publicKey!!.bytesFromHex())) {
+            if (!SignatureUtils.verify(transaction, sender.publicKey!!.bytesFromHex())) {
                 LOG.warn("Invalid signature")
                 return false
             }
