@@ -4,7 +4,6 @@ package io.mc.blockchain.node.server.rest
 import io.mc.blockchain.node.server.persistence.Block
 import io.mc.blockchain.node.server.service.BlockService
 import io.mc.blockchain.node.server.service.MiningService
-import io.mc.blockchain.node.server.utils.encodeBase64String
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
@@ -23,7 +22,7 @@ constructor(val blockService: BlockService,
      * @return JSON list of Blocks
      */
     @RequestMapping
-    fun  blockchain() : List<Block>{
+    fun blockchain(): List<Block> {
         return blockService.getBlockchain()
     }
 
