@@ -2,10 +2,7 @@ package io.mc.blockchain.node.server.persistence
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.common.primitives.Longs
 import io.mc.blockchain.node.server.utils.bytesFromHex
-import io.mc.blockchain.node.server.utils.toHexString
-import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.data.cassandra.mapping.PrimaryKey
 import org.springframework.data.cassandra.mapping.Table
 
@@ -51,11 +48,6 @@ data class Transaction(
         fun fromJsonString(transaction: String): Transaction{
             return ObjectMapper().readValue(transaction,Transaction::class.java)
         }
-
-        fun calculateHashId(text: String,senderId: String, signature: String, timestamp: Long): String {
-            return DigestUtils.sha256( text.bytesFromHex()+ senderId.bytesFromHex()+ signature.bytesFromHex() +Longs.toByteArray(timestamp)).toHexString()
-        }
-
 
     }
 }

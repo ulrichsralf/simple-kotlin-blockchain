@@ -2,8 +2,10 @@ package io.mc.blockchain.node.server.utils
 
 
 import io.mc.blockchain.node.server.persistence.Transaction
-import java.security.*
-import java.security.spec.PKCS8EncodedKeySpec
+import java.security.KeyFactory
+import java.security.NoSuchAlgorithmException
+import java.security.NoSuchProviderException
+import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 
 object SignatureUtils {
@@ -25,17 +27,6 @@ object SignatureUtils {
 
 
     /**
-     * Generate a random key pair.
-     * @return KeyPair containg private and public key
-     */
-    fun generateKeyPair(): KeyPair {
-        val keyGen = KeyPairGenerator.getInstance("DSA", "SUN")
-        val random = SecureRandom.getInstance("SHA1PRNG", "SUN")
-        keyGen.initialize(1024, random)
-        return keyGen.generateKeyPair()
-    }
-
-    /**
      * Verify if the given signature is valid .
      */
     fun verify(transaction: Transaction, publicKey: ByteArray): Boolean {
@@ -50,20 +41,6 @@ object SignatureUtils {
         return sig.verify(transaction.signature?.bytesFromHex())
     }
 
-    /**
-     * Sign given data with a private key
-     */
-    fun sign(signData: ByteArray, privateKey: ByteArray): ByteArray {
-        // construct a PrivateKey-object from raw bytes
-        val keySpec = PKCS8EncodedKeySpec(privateKey)
-        val privateKeyObj = keyFactory.generatePrivate(keySpec)
-
-        // do the signage
-        val sig = signatureObj
-        sig.initSign(privateKeyObj)
-        sig.update(signData)
-        return sig.sign()
-    }
 
     private val signatureObj = Signature.getInstance("SHA1withDSA", "SUN")
 
