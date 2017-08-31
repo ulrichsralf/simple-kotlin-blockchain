@@ -6,7 +6,6 @@ import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.*
 
 
 @Service
@@ -17,7 +16,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
 
 
     fun getBlockchain(): List<Block> {
-        return blockRepository.findAll().toList().sortedBy { it.partition }
+        return blockRepository.findAll().toList().sortedBy { it.timestamp }
     }
 
     /**

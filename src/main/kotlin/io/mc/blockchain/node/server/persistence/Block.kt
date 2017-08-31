@@ -4,10 +4,7 @@ import com.google.common.primitives.Longs
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.toHexString
 import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.cassandra.core.PrimaryKeyType
-import org.springframework.data.annotation.Transient
 import org.springframework.data.cassandra.mapping.PrimaryKey
-import org.springframework.data.cassandra.mapping.PrimaryKeyColumn
 import org.springframework.data.cassandra.mapping.Table
 import java.util.*
 
@@ -22,9 +19,7 @@ data class Block(var version: Long? = 1L,
                  var nonce: Long? = null,
                  var timestamp: Long? = System.currentTimeMillis(),
                  var merkleRoot: String? = transactions?.calculateMerkleRoot(),
-                 @PrimaryKeyColumn(name = "partition", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
-                 var partition: Long? = null,
-                 @PrimaryKeyColumn(name = "hash", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+                 @PrimaryKey
                  var hash: String? = calculateHash(previousBlockHash!!.bytesFromHex(), merkleRoot!!.bytesFromHex(), nonce!!, timestamp!!)) {
 
     override fun equals(o: Any?) = this === o || o is Block && hash == o.hash
