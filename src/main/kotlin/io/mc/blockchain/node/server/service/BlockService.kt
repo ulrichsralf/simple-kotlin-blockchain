@@ -41,8 +41,10 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
             // remove transactions from pool
             block.transactions!!.forEach({ transactionService.remove(Transaction.fromJsonString(it)) })
             return true
-        }
+        }else{
+            LOG.warn("Block is invalid! $block")
         return false
+        }
     }
 
 
