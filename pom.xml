@@ -116,6 +116,7 @@
 				</dependencies>
 			</plugin>
 		</plugins>
+		<finalName>blockchain_server_${project.version}</finalName>
 	</build>
 
 
