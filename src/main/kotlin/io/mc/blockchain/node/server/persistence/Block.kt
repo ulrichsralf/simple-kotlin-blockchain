@@ -16,7 +16,7 @@ import java.util.*
  */
 @Table(value = "blockchain")
 data class Block(var version: Long? = null,
-                 @PrimaryKeyColumn( ordinal = 0, type = PrimaryKeyType.PARTITIONED, ordering = Ordering.ASCENDING)
+                 @PrimaryKeyColumn( ordinal = 0, type = PrimaryKeyType.PARTITIONED, ordering = Ordering.DESCENDING)
                  var index: Long? = null,
                  var previousBlockHash: String? = null,
                  var transactions: List<String>? = null,
