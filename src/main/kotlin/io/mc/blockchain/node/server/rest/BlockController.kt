@@ -50,21 +50,4 @@ constructor(val blockService: BlockService,
         }
     }
 
-    /**
-     * Start mining of Blocks on this Node in a Thread
-     */
-    @RequestMapping(path = arrayOf("start-miner"))
-    fun startMiner() {
-        miningService.startMiner()
-    }
-
-    /**
-     * Stop mining of Blocks on this Node
-     */
-    @RequestMapping(path = arrayOf("stop-miner"))
-    fun stopMiner() {
-        miningService.stopMiner()
-    }
-
-
 }

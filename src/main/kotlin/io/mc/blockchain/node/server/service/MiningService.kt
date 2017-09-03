@@ -8,80 +8,54 @@ import io.mc.blockchain.node.server.utils.getLogger
 import io.mc.blockchain.node.server.utils.toHexString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.Executors
 
 @Service
 class MiningService @Autowired
-constructor(private val transactionService: TransactionService, private val blockService: BlockService) : Runnable {
+constructor(private val transactionService: TransactionService, private val blockService: BlockService) {
 
-    private val runMiner = AtomicBoolean(false)
+
     val LOG = getLogger()
+    val es = Executors.newSingleThreadExecutor()
 
-    /**
-     * Start the miner
-     */
-    fun startMiner() {
-        if (runMiner.compareAndSet(false, true)) {
-            LOG.info("Starting miner")
-            val thread = Thread(this)
-            thread.start()
-        }
-    }
-
-    /**
-     * Stop the miner after next iteration
-     */
-    fun stopMiner() {
-        LOG.info("Stopping miner")
-        runMiner.set(false)
-    }
-
-    /**
-     * Loop for new blocks until someone signals to stop
-     */
-    override fun run() {
-        while (runMiner.get()) {
-            val block = mineBlock()
-            if (block != null) {
-                // Found block! Append and publish
-                LOG.info("Mined block with " + block.transactions!!.size + " transactions and nonce " + block.nonce)
-                blockService.append(block)
-                // TODO nodeService.broadcastPut("block", block)
+    init {
+        es.submit {
+            while (true) {
+                val block = mineBlock()
+                if (block != null) {
+                    // Found block! Append and publish
+                    LOG.info("Mined block with " + block.transactions!!.size + " transactions and nonce " + block.nonce)
+                    blockService.append(block)
+                    // TODO nodeService.broadcastPut("block", block)
+                }
             }
         }
-        LOG.info("Miner stopped")
     }
+
 
     private fun mineBlock(): Block? {
         var tries: Long = 0
 
         // get previous hash and transactions
         val lastBlock = blockService.lastBlock()
-        val previousBlockHash: String? = lastBlock?.hash?:"start".toByteArray().toHexString()
-        val index = (lastBlock?.index?:0) + 1
+        val previousBlockHash: String? = lastBlock?.hash ?: "start".toByteArray().toHexString()
+        val index = (lastBlock?.index ?: 0) + 1
         val transactions = transactionService.getTransactionPool().take(Config.MAX_TRANSACTIONS_PER_BLOCK)
 
 
         // sleep if no more transactions left
         if (transactions.isEmpty()) {
             LOG.info("No transactions available, pausing")
-            try {
-                Thread.sleep(10000)
-            } catch (e: InterruptedException) {
-                LOG.error("Thread interrupted", e)
-            }
+            Thread.sleep(10000)
             return null
         }
-
         // try new block until difficulty is sufficient
-        while (runMiner.get()) {
-            val block = Block.newBlock(previousBlockHash = previousBlockHash!!,index = index, transactions = transactions.map { it.toJsonString() }, nonce = tries)
-            if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) {
-                return block
-            }
+        while (true) {
+            Thread.sleep(0)
+            val block = Block.newBlock(previousBlockHash = previousBlockHash!!, index = index, transactions = transactions.map { it.toJsonString() }, nonce = tries)
+            if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) return block
             tries++
         }
-        return null
     }
 
 }
