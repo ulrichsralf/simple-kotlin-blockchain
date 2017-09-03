@@ -4,7 +4,9 @@ import com.google.common.primitives.Longs
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.toHexString
 import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.data.cassandra.mapping.PrimaryKey
+import org.springframework.cassandra.core.Ordering
+import org.springframework.cassandra.core.PrimaryKeyType
+import org.springframework.data.cassandra.mapping.PrimaryKeyColumn
 import org.springframework.data.cassandra.mapping.Table
 import java.util.*
 
@@ -14,13 +16,14 @@ import java.util.*
  */
 @Table(value = "blockchain")
 data class Block(var version: Long? = null,
+                 @PrimaryKeyColumn( ordinal = 0, type = PrimaryKeyType.PARTITIONED, ordering = Ordering.ASCENDING)
                  var index: Long? = null,
                  var previousBlockHash: String? = null,
                  var transactions: List<String>? = null,
                  var nonce: Long? = null,
                  var timestamp: Long? = null,
                  var merkleRoot: String? = null,
-                 @PrimaryKey
+                 @PrimaryKeyColumn( ordinal = 1, type = PrimaryKeyType.CLUSTERED)
                  var hash: String? = null ) {
 
     override fun equals(o: Any?) = this === o || o is Block && hash == o.hash

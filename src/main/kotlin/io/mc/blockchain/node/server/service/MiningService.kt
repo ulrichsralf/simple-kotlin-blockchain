@@ -49,6 +49,7 @@ constructor(private val transactionService: TransactionService, private val bloc
             Thread.sleep(10000)
             return null
         }
+        LOG.info("Start mining new block")
         // try new block until difficulty is sufficient
         while (true) {
             Thread.sleep(0)
