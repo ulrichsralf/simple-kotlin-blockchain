@@ -4,6 +4,7 @@ package io.mc.blockchain.node.server.service
 import io.mc.blockchain.node.server.persistence.*
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
+import io.mc.blockchain.node.server.utils.toHexString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -36,37 +37,40 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
      */
     @Synchronized
     fun append(block: Block): Boolean {
-        if (verify(block)) {
+        return if (verify(block)) {
             blockRepository.save(block)
+            LOG.info("Block valid, adding to chain")
             // remove transactions from pool
             block.transactions!!.forEach({ transactionService.remove(Transaction.fromJsonString(it)) })
-            return true
+            true
         }else{
             LOG.warn("Block is invalid! $block")
-        return false
+            false
         }
     }
 
 
     private fun verify(block: Block): Boolean {
         // references last block in chain
-        val lastBlockInChainHash = lastBlock()?.hash
-        if (block.previousBlockHash != lastBlockInChainHash) {
-            return false
-        }
+        val lastBlock = lastBlock()
+        val lastBlockInChainHash = lastBlock?.hash?:"start".toByteArray().toHexString()
+        val lastIndex = lastBlock?.index?:0
+
+        if (block.previousBlockHash != lastBlockInChainHash) return false
 
         // correct hashes
-        if (block.merkleRoot == block.transactions!!.calculateMerkleRoot()) {
-            return false
-        }
-        if (block.hash !=calculateHash(block.previousBlockHash!!.bytesFromHex(), block.merkleRoot!!.bytesFromHex(), block.nonce!!, block.timestamp!!)) {
+        if (block.merkleRoot != block.transactions!!.calculateMerkleRoot()) return false
+
+        // correct index
+        if(block.index != lastIndex + 1) return false
+
+        if (block.hash != calculateHash(block.previousBlockHash!!.bytesFromHex(), block.merkleRoot!!.bytesFromHex(), block.nonce!!, block.timestamp!!)) {
             return false
         }
 
         // transaction limit
-        if (block.transactions!!.size > Config.MAX_TRANSACTIONS_PER_BLOCK) {
-            return false
-        }
+        if (block.transactions!!.size > Config.MAX_TRANSACTIONS_PER_BLOCK) return false
+
 
         // all transactions in pool
         // considered difficulty

@@ -5,6 +5,7 @@ import io.mc.blockchain.node.server.persistence.Block
 import io.mc.blockchain.node.server.persistence.getLeadingZerosCount
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
+import io.mc.blockchain.node.server.utils.toHexString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicBoolean
@@ -55,7 +56,9 @@ constructor(private val transactionService: TransactionService, private val bloc
         var tries: Long = 0
 
         // get previous hash and transactions
-        val previousBlockHash: String? = blockService.lastBlock()?.hash
+        val lastBlock = blockService.lastBlock()
+        val previousBlockHash: String? = lastBlock?.hash?:"start".toByteArray().toHexString()
+        val index = (lastBlock?.index?:0) + 1
         val transactions = transactionService.getTransactionPool().take(Config.MAX_TRANSACTIONS_PER_BLOCK)
 
 
@@ -72,7 +75,7 @@ constructor(private val transactionService: TransactionService, private val bloc
 
         // try new block until difficulty is sufficient
         while (runMiner.get()) {
-            val block = Block(previousBlockHash = previousBlockHash, transactions = transactions.map { it.toJsonString() }, nonce = tries)
+            val block = Block.newBlock(previousBlockHash = previousBlockHash!!,index = index, transactions = transactions.map { it.toJsonString() }, nonce = tries)
             if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) {
                 return block
             }

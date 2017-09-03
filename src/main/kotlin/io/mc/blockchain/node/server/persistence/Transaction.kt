@@ -2,7 +2,6 @@ package io.mc.blockchain.node.server.persistence
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.mc.blockchain.node.server.utils.bytesFromHex
 import org.springframework.data.cassandra.mapping.PrimaryKey
 import org.springframework.data.cassandra.mapping.Table
 
@@ -36,17 +35,13 @@ data class Transaction(
     override fun hashCode() = id!!.hashCode()
 
 
-    fun getSignData(): ByteArray {
-        return  text!!.bytesFromHex()
-    }
-
     fun toJsonString(): String {
         return ObjectMapper().writeValueAsString(this)
     }
 
     companion object {
-        fun fromJsonString(transaction: String): Transaction{
-            return ObjectMapper().readValue(transaction,Transaction::class.java)
+        fun fromJsonString(transaction: String): Transaction {
+            return ObjectMapper().readValue(transaction, Transaction::class.java)
         }
 
     }

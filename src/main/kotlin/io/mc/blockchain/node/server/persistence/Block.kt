@@ -13,18 +13,39 @@ import java.util.*
  * 27.08.17
  */
 @Table(value = "blockchain")
-data class Block(var version: Long? = 1L,
+data class Block(var version: Long? = null,
+                 var index: Long? = null,
                  var previousBlockHash: String? = null,
                  var transactions: List<String>? = null,
                  var nonce: Long? = null,
-                 var timestamp: Long? = System.currentTimeMillis(),
-                 var merkleRoot: String? = transactions?.calculateMerkleRoot(),
+                 var timestamp: Long? = null,
+                 var merkleRoot: String? = null,
                  @PrimaryKey
-                 var hash: String? = calculateHash(previousBlockHash!!.bytesFromHex(), merkleRoot!!.bytesFromHex(), nonce!!, timestamp!!)) {
+                 var hash: String? = null ) {
 
     override fun equals(o: Any?) = this === o || o is Block && hash == o.hash
     override fun hashCode() = hash!!.hashCode()
+
+
+    companion object {
+        fun newBlock(previousBlockHash: String, index: Long, transactions: List<String>,nonce: Long,timestamp: Long = System.currentTimeMillis()): Block{
+            val mRoot = transactions.calculateMerkleRoot()
+            return Block(
+                    version = 1L,
+                    index = index,
+                    previousBlockHash = previousBlockHash,
+                    transactions = transactions,
+                    nonce = nonce,
+                    timestamp = timestamp,
+                    merkleRoot = mRoot,
+                    hash = calculateHash(previousBlockHash.bytesFromHex(), mRoot.bytesFromHex(), nonce, timestamp) )
+        }
+    }
+
 }
+
+
+
 
 
 fun List<String>.calculateMerkleRoot(): String {
