@@ -1,0 +1,45 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Mind Blockchain</title>
+    <script src="/webjars/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css"/>
+</head>
+<body>
+<div id="container" class="container">
+
+    <div class="page-header">
+        <h1>Mind Blockchain</h1>
+    </div>
+
+    <h3>Blocks
+        <small>with transactions</small>
+    </h3>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Hash</th>
+            <th>Previous</th>
+            <th>Timestamp</th>
+            <th>Nonce</th>
+            <th>Merkleroot</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="block : ${blocks}">
+            <td th:text="${block.index}">1</td>
+            <td th:text="${block.hash}">230427208352805</td>
+            <td th:text="${block.previousBlockHash}">345345453455435345</td>
+            <td th:text="${block.timestamp}">56706796585</td>
+            <td th:text="${block.nonce}">3423</td>
+            <td th:text="${block.merkleRoot}">24524523454553454</td>
+        </tr>
+        </tbody>
+    </table>
+
+
+
+    </div>
+</body>
+</html>
