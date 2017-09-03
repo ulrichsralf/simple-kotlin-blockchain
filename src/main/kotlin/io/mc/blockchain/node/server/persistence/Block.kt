@@ -74,10 +74,5 @@ fun calculateHash(previousBlockHash: ByteArray, merkleRoot: ByteArray, nonce: Lo
  * Count the number of bytes in the hash, which are zero at the beginning
  */
 fun ByteArray.getLeadingZerosCount(): Int {
-    for (i in 0 until size) {
-        if (this[i].toInt() != 0) {
-            return i
-        }
-    }
-    return this.size
+    return (0 until size).firstOrNull { this[it].toInt() != 0 } ?: this.size
 }
