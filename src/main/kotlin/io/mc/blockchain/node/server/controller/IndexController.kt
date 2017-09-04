@@ -17,7 +17,7 @@ import org.springframework.web.servlet.ModelAndView
 class IndexController @Autowired constructor(val blockService: BlockService) {
 
     @RequestMapping("/")
-    fun getIndex(@RequestParam index: Int?): ModelAndView {
+    fun getIndex(@RequestParam(required = false) index: Int?): ModelAndView {
         val blocks = blockService.getBlockchain()
         return ModelAndView("home", mutableMapOf("blocks" to blocks,
                 "transactions" to if (index != null && index <= blocks.size) blocks[index - 1].transactions?.map { Transaction.fromJsonString(it).apply { text = String(text!!.bytesFromHex()) } } else null))
