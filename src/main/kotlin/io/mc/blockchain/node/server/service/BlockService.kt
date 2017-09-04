@@ -17,7 +17,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
 
 
     fun getBlockchain(): List<Block> {
-        return blockRepository.findAll().toList().sortedBy { it.timestamp }
+        return blockRepository.findAll().toList().sortedByDescending { it.timestamp }
     }
 
     /**
@@ -26,7 +26,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
      * @return Last Block in chain
      */
     fun lastBlock(): Block? {
-        return getBlockchain().lastOrNull()
+        return getBlockchain().firstOrNull()
     }
 
     /**
