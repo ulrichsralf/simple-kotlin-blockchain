@@ -1,6 +1,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Mind Blockchain</title>
+    <script src="/webjars/jquery/3.2.1/jquery.min.js"></script>
     <script src="/webjars/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css"/>
 </head>
@@ -27,19 +28,45 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="block : ${blocks}">
-            <td th:text="${block.index}">1</td>
-            <td th:text="${block.hash}">230427208352805</td>
-            <td th:text="${block.previousBlockHash}">345345453455435345</td>
-            <td th:text="${block.timestamp}">56706796585</td>
-            <td th:text="${block.nonce}">3423</td>
-            <td th:text="${block.merkleRoot}">24524523454553454</td>
+        <tr th:each="block : ${blocks}" th:onclick="'document.location = \'?index='+ ${block.index} + '\'' ">
+                <td th:text="${block.index}">1</td>
+                <td th:text="${block.hash}">230427208352805</td>
+                <td th:text="${block.previousBlockHash}">345345453455435345</td>
+                <td th:text="${block.timestamp}">56706796585</td>
+                <td th:text="${block.nonce}">3423</td>
+                <td th:text="${block.merkleRoot}">24524523454553454</td>
+
         </tr>
         </tbody>
     </table>
 
 
+    <h3 th:if="${transactions != null}">Transactions
+        <small>of selected block</small>
+    </h3>
 
-    </div>
+    <table th:if="${transactions != null}" class="table small">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>SenderId</th>
+            <th>Text</th>
+            <th>Timestamp</th>
+            <th>Signature</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="tx : ${transactions}">
+            <td th:text="${tx.id}">1</td>
+            <td th:text="${tx.senderId}">230427208352805</td>
+            <td th:text="${tx.text}">345345453455435345</td>
+            <td th:text="${tx.timestamp}">56706796585</td>
+            <td th:text="${tx.signature}">3423</td>
+        </tr>
+        </tbody>
+    </table>
+
+
+</div>
 </body>
 </html>

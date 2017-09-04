@@ -8,7 +8,6 @@ import io.mc.blockchain.node.server.utils.getLogger
 import io.mc.blockchain.node.server.utils.toHexString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 class MiningService @Autowired
@@ -16,10 +15,9 @@ constructor(private val transactionService: TransactionService, private val bloc
 
 
     val LOG = getLogger()
-    val es = Executors.newSingleThreadExecutor()
 
     init {
-        es.submit {
+        Thread {
             while (true) {
                 val block = mineBlock()
                 if (block != null) {
@@ -29,7 +27,7 @@ constructor(private val transactionService: TransactionService, private val bloc
                     // TODO nodeService.broadcastPut("block", block)
                 }
             }
-        }
+        }.start()
     }
 
 
@@ -51,12 +49,15 @@ constructor(private val transactionService: TransactionService, private val bloc
         }
         LOG.info("Start mining new block")
         // try new block until difficulty is sufficient
-        while (true) {
-            Thread.sleep(0)
-            val block = Block.newBlock(previousBlockHash = previousBlockHash!!, index = index, transactions = transactions.map { it.toJsonString() }, nonce = tries)
-            if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) return block
-            tries++
-        }
+        while (true)
+            try {
+                Thread.sleep(0)
+                val block = Block.newBlock(previousBlockHash = previousBlockHash!!, index = index, transactions = transactions.map { it.toJsonString() }, nonce = tries)
+                if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) return block
+                tries++
+            } catch (e: Exception) {
+                LOG.error(e.message)
+            }
     }
 
 }

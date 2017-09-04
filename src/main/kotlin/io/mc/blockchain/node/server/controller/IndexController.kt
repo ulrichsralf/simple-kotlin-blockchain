@@ -1,9 +1,12 @@
 package io.mc.blockchain.node.server.controller
 
+import io.mc.blockchain.node.server.persistence.Transaction
 import io.mc.blockchain.node.server.service.BlockService
+import io.mc.blockchain.node.server.utils.bytesFromHex
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.ModelAndView
 
 /**
@@ -14,8 +17,10 @@ import org.springframework.web.servlet.ModelAndView
 class IndexController @Autowired constructor(val blockService: BlockService) {
 
     @RequestMapping("/")
-    fun getIndex():ModelAndView{
-        return ModelAndView("home", mutableMapOf("blocks" to blockService.getBlockchain()))
+    fun getIndex(@RequestParam index: Int?): ModelAndView {
+        val blocks = blockService.getBlockchain()
+        return ModelAndView("home", mutableMapOf("blocks" to blocks,
+                "transactions" to if (index != null && index <= blocks.size) blocks[index - 1].transactions?.map { Transaction.fromJsonString(it).apply { text = String(text!!.bytesFromHex()) } } else null))
     }
 
 }

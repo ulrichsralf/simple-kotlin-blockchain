@@ -46,11 +46,6 @@ data class Block(var version: Long? = null,
     }
 
 }
-
-
-
-
-
 fun List<String>.calculateMerkleRoot(): String {
     val hashQueue = LinkedList<ByteArray>(this.map { Transaction.fromJsonString(it).signature?.bytesFromHex() })
     while (hashQueue.size > 1) {
@@ -68,8 +63,6 @@ fun calculateHash(previousBlockHash: ByteArray, merkleRoot: ByteArray, nonce: Lo
     hashableData += Longs.toByteArray(timestamp)
     return DigestUtils.sha256Hex(hashableData)
 }
-
-
 /**
  * Count the number of bytes in the hash, which are zero at the beginning
  */
