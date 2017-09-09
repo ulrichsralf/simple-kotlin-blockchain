@@ -3,6 +3,7 @@ package io.mc.blockchain.node.server.service
 
 import io.mc.blockchain.node.server.persistence.Block
 import io.mc.blockchain.node.server.persistence.getLeadingZerosCount
+import io.mc.blockchain.node.server.persistence.toJsonString
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
 import io.mc.blockchain.node.server.utils.toHexString

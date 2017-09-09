@@ -4,6 +4,7 @@ package io.mc.blockchain.node.server.persistence
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.cassandra.mapping.PrimaryKey
 import org.springframework.data.cassandra.mapping.Table
+import kotlin.reflect.KClass
 
 @Table("transaction")
 data class Transaction(
@@ -13,13 +14,21 @@ data class Transaction(
         @PrimaryKey
         var id: String? = null,
         /**
-         * Payload of this transaction
+         * Comment of this transaction
          */
         var text: String? = null,
         /**
          * The hash of the address which is responsible for this Transaction
          */
         var senderId: String? = null,
+        /**
+         * List of inputs
+         */
+        var inputs: List<String>? = null,
+        /**
+         * List of outputs
+         */
+        var outputs: List<String>? = null,
         /**
          * Creation time of this Transaction
          */
@@ -34,15 +43,14 @@ data class Transaction(
     override fun equals(o: Any?) = this === o || o is Transaction && id == o.id
     override fun hashCode() = id!!.hashCode()
 
+}
 
-    fun toJsonString(): String {
-        return ObjectMapper().writeValueAsString(this)
-    }
+data class TxInput(val value: Long,val type: String, val senderId: String, val signature: String)
+data class TxOutput(val value: Long, val type: String, val recipientId: String)
 
-    companion object {
-        fun fromJsonString(transaction: String): Transaction {
-            return ObjectMapper().readValue(transaction, Transaction::class.java)
-        }
-
-    }
+fun Any.toJsonString():String{
+    return ObjectMapper().writeValueAsString(this)
+}
+fun <T : Any> String.parseJson(type: KClass<T>): T{
+    return ObjectMapper().readValue(this,type.java)
 }

@@ -16,22 +16,22 @@ import java.util.*
  */
 @Table(value = "blockchain")
 data class Block(var version: Long? = null,
-                 @PrimaryKeyColumn( ordinal = 0, type = PrimaryKeyType.PARTITIONED, ordering = Ordering.DESCENDING)
+                 @PrimaryKeyColumn(ordinal = 0, type = PrimaryKeyType.PARTITIONED, ordering = Ordering.DESCENDING)
                  var index: Long? = null,
                  var previousBlockHash: String? = null,
                  var transactions: List<String>? = null,
                  var nonce: Long? = null,
                  var timestamp: Long? = null,
                  var merkleRoot: String? = null,
-                 @PrimaryKeyColumn( ordinal = 1, type = PrimaryKeyType.CLUSTERED)
-                 var hash: String? = null ) {
+                 @PrimaryKeyColumn(ordinal = 1, type = PrimaryKeyType.CLUSTERED)
+                 var hash: String? = null) {
 
     override fun equals(o: Any?) = this === o || o is Block && hash == o.hash
     override fun hashCode() = hash!!.hashCode()
 
 
     companion object {
-        fun newBlock(previousBlockHash: String, index: Long, transactions: List<String>,nonce: Long,timestamp: Long = System.currentTimeMillis()): Block{
+        fun newBlock(previousBlockHash: String, index: Long, transactions: List<String>, nonce: Long, timestamp: Long = System.currentTimeMillis()): Block {
             val mRoot = transactions.calculateMerkleRoot()
             return Block(
                     version = 1L,
@@ -41,13 +41,13 @@ data class Block(var version: Long? = null,
                     nonce = nonce,
                     timestamp = timestamp,
                     merkleRoot = mRoot,
-                    hash = calculateHash(previousBlockHash.bytesFromHex(), mRoot.bytesFromHex(), nonce, timestamp) )
+                    hash = calculateHash(previousBlockHash.bytesFromHex(), mRoot.bytesFromHex(), nonce, timestamp))
         }
     }
 
 }
 fun List<String>.calculateMerkleRoot(): String {
-    val hashQueue = LinkedList<ByteArray>(this.map { Transaction.fromJsonString(it).signature?.bytesFromHex() })
+    val hashQueue = LinkedList<ByteArray>(this.map { it.parseJson(Transaction::class).signature?.bytesFromHex() })
     while (hashQueue.size > 1) {
         // take 2 hashes from queue
         val hashableData = hashQueue.poll() + hashQueue.poll()

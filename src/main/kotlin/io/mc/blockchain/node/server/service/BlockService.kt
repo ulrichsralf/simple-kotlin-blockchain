@@ -41,9 +41,9 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
             blockRepository.save(block)
             LOG.info("Block valid, adding to chain")
             // remove transactions from pool
-            block.transactions!!.forEach({ transactionService.remove(Transaction.fromJsonString(it)) })
+            block.transactions!!.forEach({ transactionService.remove(it.parseJson(Transaction::class)) })
             true
-        }else{
+        } else {
             LOG.warn("Block is invalid! $block")
             false
         }
@@ -53,8 +53,8 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
     private fun verify(block: Block): Boolean {
         // references last block in chain
         val lastBlock = lastBlock()
-        val lastBlockInChainHash = lastBlock?.hash?:"start".toByteArray().toHexString()
-        val lastIndex = lastBlock?.index?:0
+        val lastBlockInChainHash = lastBlock?.hash ?: "start".toByteArray().toHexString()
+        val lastIndex = lastBlock?.index ?: 0
 
         if (block.previousBlockHash != lastBlockInChainHash) return false
 
@@ -62,7 +62,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
         if (block.merkleRoot != block.transactions!!.calculateMerkleRoot()) return false
 
         // correct index
-        if(block.index != lastIndex + 1) return false
+        if (block.index != lastIndex + 1) return false
 
         if (block.hash != calculateHash(block.previousBlockHash!!.bytesFromHex(), block.merkleRoot!!.bytesFromHex(), block.nonce!!, block.timestamp!!)) {
             return false
@@ -74,7 +74,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
 
         // all transactions in pool
         // considered difficulty
-        return transactionService.containsAll(block.transactions!!.map { Transaction.fromJsonString(it) }) && block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY
+        return transactionService.containsAll(block.transactions!!.map { it.parseJson(Transaction::class) }) && block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY
 
     }
 
