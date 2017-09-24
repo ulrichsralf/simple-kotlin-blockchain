@@ -1,7 +1,5 @@
 package io.mc.blockchain.node.server.persistence
 
-import org.mapdb.DBMaker
-import org.mapdb.HTreeMap
 import org.springframework.stereotype.Component
 
 /**
@@ -12,18 +10,14 @@ import org.springframework.stereotype.Component
 class BlockRepository {
 
 
-    val map: HTreeMap<String, Block>
-
-    init {
-        map = DBMaker.memoryDB().make().hashMap("block").create() as HTreeMap<String, Block>
-    }
+    val map = mutableMapOf<String, Block>()
 
     fun findAll(): List<Block> {
-        return map.values.toList().filterNotNull()
+        return map.values.toList()
     }
 
     fun save(block: Block) {
-        map.put(block.hash, block)
+        map.put(block.hash!!, block)
     }
 
 

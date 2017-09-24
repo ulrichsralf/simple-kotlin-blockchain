@@ -1,7 +1,5 @@
 package io.mc.blockchain.node.server.persistence
 
-import org.mapdb.DBMaker
-import org.mapdb.HTreeMap
 import org.springframework.stereotype.Component
 
 /**
@@ -11,18 +9,14 @@ import org.springframework.stereotype.Component
 @Component
 class TransactionRepository {
 
-    val map: HTreeMap<String, Transaction>
-
-    init {
-        map = DBMaker.memoryDB().make().hashMap("transaction").create() as HTreeMap<String, Transaction>
-    }
+    val map = mutableMapOf<String, Transaction>()
 
     fun findAll(): List<Transaction> {
-        return map.values.toList().filterNotNull()
+        return map.values.toList()
     }
 
     fun save(transaction: Transaction): Transaction? {
-        return map.put(transaction.id, transaction) as Transaction?
+        return map.put(transaction.id!!, transaction)
     }
 
     fun delete(transaction: Transaction) {
