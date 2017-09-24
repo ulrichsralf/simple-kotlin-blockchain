@@ -16,7 +16,8 @@ class TransactionRepository {
     }
 
     fun save(transaction: Transaction): Transaction? {
-        return map.put(transaction.id!!, transaction)
+        map.put(transaction.id!!, transaction)
+        return transaction
     }
 
     fun delete(transaction: Transaction) {
