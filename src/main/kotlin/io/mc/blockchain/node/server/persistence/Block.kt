@@ -13,7 +13,7 @@ import java.util.*
 data class Block(var version: Long? = null,
                  var index: Long? = null,
                  var previousBlockHash: String? = null,
-                 var transactions: List<String>? = null,
+                 var transactions: List<Transaction>? = null,
                  var nonce: Long? = null,
                  var timestamp: Long? = null,
                  var merkleRoot: String? = null,
@@ -24,7 +24,7 @@ data class Block(var version: Long? = null,
 
 
     companion object {
-        fun newBlock(previousBlockHash: String, index: Long, transactions: List<String>, nonce: Long, timestamp: Long = System.currentTimeMillis()): Block {
+        fun newBlock(previousBlockHash: String, index: Long, transactions: List<Transaction>, nonce: Long, timestamp: Long = System.currentTimeMillis()): Block {
             val mRoot = transactions.calculateMerkleRoot()
             return Block(
                     version = 1L,
@@ -40,8 +40,8 @@ data class Block(var version: Long? = null,
 
 }
 
-fun List<String>.calculateMerkleRoot(): String {
-    val hashQueue = LinkedList<ByteArray>(this.map { it.parseJson(Transaction::class).senderSignature?.bytesFromHex() })
+fun List<Transaction>.calculateMerkleRoot(): String {
+    val hashQueue = LinkedList<ByteArray>(this.map { it.senderSignature?.bytesFromHex() })
     while (hashQueue.size > 1) {
         // take 2 hashes from queue
         val hashableData = hashQueue.poll() + hashQueue.poll()

@@ -21,7 +21,7 @@ class IndexController @Autowired constructor(val blockService: BlockService) {
     fun getIndex(@RequestParam(required = false) index: Int?): ModelAndView {
         val blocks = blockService.getBlockchain()
         return ModelAndView("home", mutableMapOf("blocks" to blocks,
-                "transactions" to if (index != null && index <= blocks.size) blocks[index - 1].transactions?.map { it.parseJson(Transaction::class) .apply { text = String(text!!.bytesFromHex()) } } else null))
+                "transactions" to if (index != null && index <= blocks.size) blocks[index - 1].transactions  else null))
     }
 
 }

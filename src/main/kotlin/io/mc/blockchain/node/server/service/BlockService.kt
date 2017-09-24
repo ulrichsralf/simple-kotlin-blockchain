@@ -41,7 +41,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
             blockRepository.save(block)
             LOG.info("Block valid, adding to chain")
             // remove transactions from pool
-            block.transactions!!.forEach({ transactionService.remove(it.parseJson(Transaction::class)) })
+            block.transactions!!.forEach({ transactionService.remove(it) })
             true
         } else {
             LOG.warn("Block is invalid! $block")
@@ -74,7 +74,7 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
 
         // all transactions in pool
         // considered difficulty
-        return transactionService.containsAll(block.transactions!!.map { it.parseJson(Transaction::class) }) && block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY
+        return transactionService.containsAll(block.transactions!!) && block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY
 
     }
 

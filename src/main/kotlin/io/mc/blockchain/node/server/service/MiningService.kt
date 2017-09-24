@@ -3,7 +3,6 @@ package io.mc.blockchain.node.server.service
 
 import io.mc.blockchain.node.server.persistence.Block
 import io.mc.blockchain.node.server.persistence.getLeadingZerosCount
-import io.mc.blockchain.node.server.persistence.toJsonString
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
 import io.mc.blockchain.node.server.utils.toHexString
@@ -53,7 +52,7 @@ constructor(private val transactionService: TransactionService, private val bloc
         while (true)
             try {
                 Thread.sleep(0)
-                val block = Block.newBlock(previousBlockHash = previousBlockHash!!, index = index, transactions = transactions.map { it.toJsonString() }, nonce = tries)
+                val block = Block.newBlock(previousBlockHash = previousBlockHash!!, index = index, transactions = transactions, nonce = tries)
                 if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) return block
                 tries++
             } catch (e: Exception) {
