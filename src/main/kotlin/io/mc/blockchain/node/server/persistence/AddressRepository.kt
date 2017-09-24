@@ -2,7 +2,6 @@ package io.mc.blockchain.node.server.persistence
 
 import org.mapdb.DBMaker
 import org.mapdb.HTreeMap
-import org.mapdb.Serializer
 import org.springframework.stereotype.Component
 
 
@@ -13,15 +12,15 @@ import org.springframework.stereotype.Component
 @Component
 class AddressRepository {
 
-    val map: HTreeMap<String, Any>
+    val map: HTreeMap<String, Address>
 
     init {
-        map = DBMaker.memoryDB().make().hashMap("address", Serializer.STRING, Serializer.JAVA).create()
+        map = DBMaker.memoryDB().make().hashMap("address").create() as HTreeMap<String, Address>
     }
 
 
     fun findAll(): List<Address> {
-        return map.values.filterIsInstance(Address::class.java)
+        return map.values.toList().filterNotNull()
     }
 
 

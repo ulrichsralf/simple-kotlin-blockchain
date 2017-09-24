@@ -2,7 +2,6 @@ package io.mc.blockchain.node.server.persistence
 
 import org.mapdb.DBMaker
 import org.mapdb.HTreeMap
-import org.mapdb.Serializer
 import org.springframework.stereotype.Component
 
 /**
@@ -12,14 +11,14 @@ import org.springframework.stereotype.Component
 @Component
 class TransactionRepository {
 
-    val map: HTreeMap<String, Any>
+    val map: HTreeMap<String, Transaction>
 
     init {
-        map = DBMaker.memoryDB().make().hashMap("transaction", Serializer.STRING, Serializer.JAVA).create()
+        map = DBMaker.memoryDB().make().hashMap("transaction").create() as HTreeMap<String, Transaction>
     }
 
     fun findAll(): List<Transaction> {
-      return map.values.filterIsInstance(Transaction::class.java)
+        return map.values.toList().filterNotNull()
     }
 
     fun save(transaction: Transaction): Transaction? {
