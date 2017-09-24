@@ -4,26 +4,19 @@ import com.google.common.primitives.Longs
 import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.toHexString
 import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.cassandra.core.Ordering
-import org.springframework.cassandra.core.PrimaryKeyType
-import org.springframework.data.cassandra.mapping.PrimaryKeyColumn
-import org.springframework.data.cassandra.mapping.Table
 import java.util.*
 
 /**
  * @author Ralf Ulrich
  * 27.08.17
  */
-@Table(value = "blockchain")
 data class Block(var version: Long? = null,
-                 @PrimaryKeyColumn(ordinal = 0, type = PrimaryKeyType.PARTITIONED, ordering = Ordering.DESCENDING)
                  var index: Long? = null,
                  var previousBlockHash: String? = null,
                  var transactions: List<String>? = null,
                  var nonce: Long? = null,
                  var timestamp: Long? = null,
                  var merkleRoot: String? = null,
-                 @PrimaryKeyColumn(ordinal = 1, type = PrimaryKeyType.CLUSTERED)
                  var hash: String? = null) {
 
     override fun equals(o: Any?) = this === o || o is Block && hash == o.hash
@@ -46,8 +39,9 @@ data class Block(var version: Long? = null,
     }
 
 }
+
 fun List<String>.calculateMerkleRoot(): String {
-    val hashQueue = LinkedList<ByteArray>(this.map { it.parseJson(Transaction::class).signature?.bytesFromHex() })
+    val hashQueue = LinkedList<ByteArray>(this.map { it.parseJson(Transaction::class).senderSignature?.bytesFromHex() })
     while (hashQueue.size > 1) {
         // take 2 hashes from queue
         val hashableData = hashQueue.poll() + hashQueue.poll()
@@ -63,6 +57,7 @@ fun calculateHash(previousBlockHash: ByteArray, merkleRoot: ByteArray, nonce: Lo
     hashableData += Longs.toByteArray(timestamp)
     return DigestUtils.sha256Hex(hashableData)
 }
+
 /**
  * Count the number of bytes in the hash, which are zero at the beginning
  */

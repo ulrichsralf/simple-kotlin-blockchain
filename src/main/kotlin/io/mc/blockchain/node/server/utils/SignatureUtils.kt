@@ -38,7 +38,7 @@ object SignatureUtils {
         val sig = signatureObj
         sig.initVerify(publicKeyObj)
         sig.update(transaction.text!!.bytesFromHex())
-        return sig.verify(transaction.signature?.bytesFromHex())
+        return sig.verify(transaction.senderSignature?.bytesFromHex())
     }
 
 
