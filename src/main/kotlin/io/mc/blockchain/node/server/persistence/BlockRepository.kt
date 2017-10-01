@@ -9,15 +9,14 @@ import org.springframework.stereotype.Component
 @Component
 class BlockRepository {
 
-
-    val map = mutableMapOf<String, Block>()
+    val map = mutableMapOf<ByteArray, Block>()
 
     fun findAll(): List<Block> {
         return map.values.toList()
     }
 
     fun save(block: Block) {
-        map.put(block.hash!!, block)
+        map.put(block.hash, block)
     }
 
 

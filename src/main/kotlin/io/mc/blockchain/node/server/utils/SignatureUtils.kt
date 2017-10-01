@@ -1,11 +1,9 @@
 package io.mc.blockchain.node.server.utils
 
 
-import io.mc.blockchain.node.server.persistence.Transaction
-import java.security.KeyFactory
-import java.security.NoSuchAlgorithmException
-import java.security.NoSuchProviderException
-import java.security.Signature
+import io.mc.blockchain.common.ISignedEntity
+import java.security.*
+import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 
 object SignatureUtils {
@@ -24,12 +22,36 @@ object SignatureUtils {
         LOG.error("Failed initializing keyFactory", e)
         throw e
     }
+    /**
+     * Generate a random key pair.
+     * @return KeyPair containg private and public key
+     */
+    fun generateKeyPair(): KeyPair {
+        val keyGen = KeyPairGenerator.getInstance("DSA", "SUN")
+        val random = SecureRandom.getInstance("SHA1PRNG", "SUN")
+        keyGen.initialize(1024, random)
+        return keyGen.generateKeyPair()
+    }
 
+    /**
+     * Sign given data with a private key
+     */
+    fun sign(signData: ByteArray, privateKey: ByteArray): ByteArray {
+        // construct a PrivateKey-object from raw bytes
+        val keySpec = PKCS8EncodedKeySpec(privateKey)
+        val privateKeyObj = keyFactory.generatePrivate(keySpec)
+
+        // do the signage
+        val sig = signatureObj
+        sig.initSign(privateKeyObj)
+        sig.update(signData)
+        return sig.sign()
+    }
 
     /**
      * Verify if the given signature is valid .
      */
-    fun verify(transaction: Transaction, publicKey: ByteArray): Boolean {
+    fun verify(signedEntity: ISignedEntity, publicKey: ByteArray): Boolean {
         // construct a public key from raw bytes
         val keySpec = X509EncodedKeySpec(publicKey)
         val publicKeyObj = keyFactory.generatePublic(keySpec)
@@ -37,8 +59,8 @@ object SignatureUtils {
         // do the verification
         val sig = signatureObj
         sig.initVerify(publicKeyObj)
-        sig.update(transaction.text!!.bytesFromHex())
-        return sig.verify(transaction.senderSignature?.bytesFromHex())
+        sig.update(signedEntity.hash!!)
+        return sig.verify(signedEntity.signature)
     }
 
 

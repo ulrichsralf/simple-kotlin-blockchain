@@ -1,8 +1,10 @@
 package io.mc.blockchain.node.server.persistence
 
 import com.google.common.primitives.Longs
-import io.mc.blockchain.node.server.utils.bytesFromHex
-import io.mc.blockchain.node.server.utils.toHexString
+import io.mc.blockchain.common.IHashedEntity
+import io.mc.blockchain.common.ISignable
+import io.mc.blockchain.common.ISignedEntity
+import io.mc.blockchain.common.Transaction
 import org.apache.commons.codec.digest.DigestUtils
 import java.util.*
 
@@ -10,53 +12,62 @@ import java.util.*
  * @author Ralf Ulrich
  * 27.08.17
  */
-data class Block(var version: Long? = null,
-                 var index: Long? = null,
-                 var previousBlockHash: String? = null,
-                 var transactions: List<Transaction>? = null,
-                 var nonce: Long? = null,
-                 var timestamp: Long? = null,
-                 var merkleRoot: String? = null,
-                 var hash: String? = null) {
+data class Block(override val hash: ByteArray,
+                 override val hashData: BlockData) : IHashedEntity {
 
-    override fun equals(o: Any?) = this === o || o is Block && hash == o.hash
-    override fun hashCode() = hash!!.hashCode()
+    override fun equals(other: Any?) = this === other
+            || other is Block && Arrays.equals(hash, other.hash)
 
+    override fun hashCode() = hash.hashCode()
 
     companion object {
-        fun newBlock(previousBlockHash: String, index: Long, transactions: List<Transaction>, nonce: Long, timestamp: Long = System.currentTimeMillis()): Block {
-            val mRoot = transactions.calculateMerkleRoot()
-            return Block(
-                    version = 1L,
-                    index = index,
-                    previousBlockHash = previousBlockHash,
-                    transactions = transactions,
-                    nonce = nonce,
-                    timestamp = timestamp,
-                    merkleRoot = mRoot,
-                    hash = calculateHash(previousBlockHash.bytesFromHex(), mRoot.bytesFromHex(), nonce, timestamp))
+        fun newBlock(previousBlockHash: ByteArray,
+                     index: Long,
+                     transactions: List<Transaction>,
+                     nonce: Long,
+                     timestamp: Long = System.currentTimeMillis()
+        ): Block {
+            val blockData = BlockData(
+                    1L,
+                    index,
+                    previousBlockHash,
+                    transactions,
+                    nonce,
+                    timestamp)
+            return Block(blockData.sha256Hash(), blockData)
         }
     }
-
 }
 
-fun List<Transaction>.calculateMerkleRoot(): String {
-    val hashQueue = LinkedList<ByteArray>(this.map { it.senderSignature?.bytesFromHex() })
+fun ISignable.sha256Hash(): ByteArray {
+    return DigestUtils.sha256(getSignedBytes())
+}
+
+
+data class BlockData(val version: Long,
+                     val index: Long,
+                     val previousBlockHash: ByteArray,
+                     val transactions: List<Transaction>,
+                     val nonce: Long,
+                     val timestamp: Long) : ISignable {
+
+    override fun getSignedBytes(): ByteArray {
+        return previousBlockHash +
+                transactions.calculateMerkleRoot() +
+                Longs.toByteArray(nonce) +
+                Longs.toByteArray(timestamp)
+    }
+}
+
+fun List<IHashedEntity>.calculateMerkleRoot(): ByteArray {
+    val hashQueue = LinkedList<ByteArray>(this.map { it.hash })
     while (hashQueue.size > 1) {
-        // take 2 hashes from queue
         val hashableData = hashQueue.poll() + hashQueue.poll()
-        // put new hash at end of queue
         hashQueue.add(DigestUtils.sha256(hashableData))
     }
-    return hashQueue.poll().toHexString()
+    return if (hashQueue.size == 0) byteArrayOf() else hashQueue.poll()
 }
 
-fun calculateHash(previousBlockHash: ByteArray, merkleRoot: ByteArray, nonce: Long, timestamp: Long): String {
-    var hashableData = previousBlockHash + merkleRoot
-    hashableData += Longs.toByteArray(nonce)
-    hashableData += Longs.toByteArray(timestamp)
-    return DigestUtils.sha256Hex(hashableData)
-}
 
 /**
  * Count the number of bytes in the hash, which are zero at the beginning

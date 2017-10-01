@@ -1,5 +1,6 @@
 package io.mc.blockchain.node.server.persistence
 
+import io.mc.blockchain.common.Address
 import org.springframework.stereotype.Component
 
 

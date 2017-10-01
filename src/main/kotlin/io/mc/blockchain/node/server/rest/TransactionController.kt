@@ -1,7 +1,7 @@
 package io.mc.blockchain.node.server.rest
 
 
-import io.mc.blockchain.node.server.persistence.Transaction
+import io.mc.blockchain.common.Transaction
 import io.mc.blockchain.node.server.service.TransactionService
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,7 +33,7 @@ constructor(val transactionService: TransactionService) {
      */
     @RequestMapping(method = arrayOf(RequestMethod.PUT))
     internal fun addTransaction(@RequestBody transaction: Transaction, response: HttpServletResponse) {
-        LOG.info("Add transaction " + transaction.id)
+        LOG.info("Add transaction " + transaction.hash)
         val success = transactionService.add(transaction)
         if (success) {
             response.status = HttpServletResponse.SC_ACCEPTED

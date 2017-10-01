@@ -3,9 +3,7 @@ package io.mc.blockchain.node.server.service
 
 import io.mc.blockchain.node.server.persistence.Block
 import io.mc.blockchain.node.server.persistence.getLeadingZerosCount
-import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
-import io.mc.blockchain.node.server.utils.toHexString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -22,7 +20,7 @@ constructor(private val transactionService: TransactionService, private val bloc
                 val block = mineBlock()
                 if (block != null) {
                     // Found block! Append and publish
-                    LOG.info("Mined block with " + block.transactions!!.size + " transactions and nonce " + block.nonce)
+                    LOG.info("Mined block with " + block.hashData.transactions.size + " transactions and nonce " + block.hashData.nonce)
                     blockService.append(block)
                     // TODO nodeService.broadcastPut("block", block)
                 }
@@ -36,8 +34,8 @@ constructor(private val transactionService: TransactionService, private val bloc
 
         // get previous hash and transactions
         val lastBlock = blockService.lastBlock()
-        val previousBlockHash: String? = lastBlock?.hash ?: "start".toByteArray().toHexString()
-        val index = (lastBlock?.index ?: 0) + 1
+        val previousBlockHash: ByteArray = lastBlock?.hash ?: "start".toByteArray()
+        val index = (lastBlock?.hashData?.index ?: 0) + 1
         val transactions = transactionService.getTransactionPool().take(Config.MAX_TRANSACTIONS_PER_BLOCK)
 
 
@@ -52,8 +50,8 @@ constructor(private val transactionService: TransactionService, private val bloc
         while (true)
             try {
                 Thread.sleep(0)
-                val block = Block.newBlock(previousBlockHash = previousBlockHash!!, index = index, transactions = transactions, nonce = tries)
-                if (block.hash!!.bytesFromHex().getLeadingZerosCount() >= Config.DIFFICULTY) return block
+                val block = Block.newBlock(previousBlockHash = previousBlockHash, index = index, transactions = transactions, nonce = tries)
+                if (block.hash.getLeadingZerosCount() >= Config.DIFFICULTY) return block
                 tries++
             } catch (e: Exception) {
                 LOG.error(e.message)

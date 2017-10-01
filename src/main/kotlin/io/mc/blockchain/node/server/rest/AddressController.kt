@@ -1,7 +1,7 @@
 package io.mc.blockchain.node.server.rest
 
 
-import io.mc.blockchain.node.server.persistence.Address
+import io.mc.blockchain.common.Address
 import io.mc.blockchain.node.server.persistence.AddressRepository
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired

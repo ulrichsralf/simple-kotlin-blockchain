@@ -1,4 +1,4 @@
-package io.mc.blockchain.node.server.persistence
+package io.mc.blockchain.common
 
 data class Address(
 

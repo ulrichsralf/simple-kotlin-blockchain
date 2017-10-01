@@ -2,7 +2,7 @@ package io.mc.blockchain.node.server.service
 
 
 import io.mc.blockchain.node.server.persistence.AddressRepository
-import io.mc.blockchain.node.server.persistence.Transaction
+import io.mc.blockchain.common.Transaction
 import io.mc.blockchain.node.server.persistence.TransactionRepository
 import io.mc.blockchain.node.server.utils.SignatureUtils
 import io.mc.blockchain.node.server.utils.bytesFromHex
@@ -43,14 +43,14 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
      * @return true if all Transactions are member of the pool
      */
     fun containsAll(transactions: Collection<Transaction>): Boolean {
-        return transactions.all { transactionRepository.exists(it.id) }
+        return transactions.all { transactionRepository.exists(it.hash!!) }
     }
 
     private fun verify(transaction: Transaction): Boolean {
         // correct signature
-        val sender = addressRepository.findOne(transaction.senderId)
+        val sender = addressRepository.findOne(transaction.hashData!!.senderId)
         if (sender == null) {
-            LOG.warn("Unknown address " + transaction.senderId)
+            LOG.warn("Unknown address " + transaction.hashData!!.senderId)
             return false
         }
 
