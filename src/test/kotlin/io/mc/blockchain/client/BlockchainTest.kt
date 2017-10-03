@@ -10,7 +10,7 @@ import java.nio.file.Paths
 class BlockchainTest {
 
 
-    val client = BlockchainClient("http://localhost:8080")
+    val client = BlockchainClient("http://vpf.mind-score.de")
 
     @Test
     fun testAddAddress() {
