@@ -1,11 +1,13 @@
 package io.mc.blockchain.client
 
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import feign.Feign
 import feign.Headers
 import feign.RequestLine
 import feign.jackson.JacksonEncoder
 import io.mc.blockchain.common.*
+import io.mc.blockchain.node.server.config.JacksonConfig
 import io.mc.blockchain.node.server.persistence.sha256Hash
 import io.mc.blockchain.node.server.utils.SignatureUtils
 import io.mc.blockchain.node.server.utils.getLogger
@@ -34,7 +36,10 @@ import java.nio.file.Paths
 class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
 
-    private val restClient = Feign.builder().encoder(JacksonEncoder()).target(Blockchain::class.java, serverNode)
+    private val restClient = Feign.builder().encoder(JacksonEncoder(ObjectMapper()
+            .apply {
+                registerModule(JacksonConfig.getBase64Module())
+            })).target(Blockchain::class.java, serverNode)
     private val LOG = getLogger()
 
     fun executeCommand(line: CommandLine) {

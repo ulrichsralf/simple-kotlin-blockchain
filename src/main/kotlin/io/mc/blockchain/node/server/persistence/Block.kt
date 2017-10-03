@@ -1,5 +1,6 @@
 package io.mc.blockchain.node.server.persistence
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.google.common.primitives.Longs
 import io.mc.blockchain.common.IHashedEntity
 import io.mc.blockchain.common.ISignable
@@ -11,7 +12,9 @@ import java.util.*
  * @author Ralf Ulrich
  * 27.08.17
  */
-data class Block(override val hash: ByteArray,
+data class Block(
+        @JsonSerialize()
+        override val hash: ByteArray,
                  override val hashData: BlockData) : IHashedEntity {
 
     override fun equals(other: Any?) = this === other
