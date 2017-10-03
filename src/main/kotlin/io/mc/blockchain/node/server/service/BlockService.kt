@@ -2,9 +2,7 @@ package io.mc.blockchain.node.server.service
 
 
 import io.mc.blockchain.node.server.persistence.*
-import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
-import io.mc.blockchain.node.server.utils.toHexString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.*
@@ -40,9 +38,10 @@ class BlockService @Autowired constructor(val transactionService: TransactionSer
     fun append(block: Block): Boolean {
         return if (verify(block)) {
             blockRepository.save(block)
+
             LOG.info("Block valid, adding to chain")
-            // remove transactions from pool
-            block.hashData.transactions.forEach({ transactionService.remove(it) })
+            // moveToValid transactions from pool
+            block.hashData.transactions.forEach({ transactionService.moveToValid(it) })
             true
         } else {
             LOG.warn("Block is invalid! $block")

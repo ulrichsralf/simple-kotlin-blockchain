@@ -1,6 +1,7 @@
 package io.mc.blockchain.node.server.persistence
 
 import io.mc.blockchain.common.Address
+import io.mc.blockchain.node.server.utils.toBase64String
 import org.springframework.stereotype.Component
 
 
@@ -20,19 +21,19 @@ class AddressRepository {
 
 
     fun save(address: Address) {
-        map.put(address.id!!, address)
+        map.put(address.id!!.toBase64String(), address)
     }
 
-    fun delete(id: String) {
-        map.remove(id)
+    fun delete(id: ByteArray) {
+        map.remove(id.toBase64String())
     }
 
-    fun exists(id: String?): Boolean {
-        return map.containsKey(id)
+    fun exists(id: ByteArray): Boolean {
+        return map.containsKey(id.toBase64String())
     }
 
-    fun findOne(senderId: String?): Address? {
-        return map.get(senderId)
+    fun findOne(senderId: ByteArray): Address? {
+        return map.get(senderId.toBase64String())
     }
 
 }

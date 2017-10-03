@@ -17,15 +17,15 @@ data class Transaction(
 }
 
 data class TransactionData(var text: String? = null,
-                           var senderId: String? = null,
+                           var senderId: ByteArray? = null,
                            var inputs: List<TxInput>? = null,
                            var outputs: List<TxOutput>? = null,
                            var timestamp: Long? = System.currentTimeMillis()) : ISignable {
     override fun getSignedBytes(): ByteArray {
         return text!!.toByteArray() +
-                senderId!!.toByteArray() +
-                inputs!!.calculateMerkleRoot() +
-                outputs!!.calculateMerkleRoot() +
+                senderId!! +
+                inputs!!.sortedBy { it.hashData!!.index!! }.calculateMerkleRoot() +
+                outputs!!.sortedBy { it.hashData!!.index!! }.calculateMerkleRoot() +
                 Longs.toByteArray(timestamp!!)
     }
 }
@@ -41,13 +41,14 @@ data class TxInputData(
         var value: Long? = null,
         var type: String? = null,
         var txHash: ByteArray? = null,
-        var txIndex: Int? = null
+        var index: Int? = null
 ) : ISignable {
     override fun getSignedBytes() =
-            Longs.toByteArray(value!!) +
+            Longs.toByteArray(
+                    value!!) +
                     type!!.toByteArray() +
                     txHash!! +
-                    txIndex!!.toByte()
+                    index!!.toByte()
 
 }
 
@@ -59,14 +60,14 @@ data class TxOutput(
 data class TxOutputData(
         var value: Long? = null,
         var type: String? = null,
-        var receiverId: String? = null,
+        var receiverId: ByteArray? = null,
         var index: Int? = null
 
 ) : ISignable {
     override fun getSignedBytes() =
             Longs.toByteArray(value!!) +
                     type!!.toByteArray() +
-                    receiverId!!.toByteArray() +
+                    receiverId!! +
                     index!!.toByte()
 }
 

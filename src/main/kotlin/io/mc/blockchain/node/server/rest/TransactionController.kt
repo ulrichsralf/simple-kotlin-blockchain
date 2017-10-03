@@ -18,13 +18,13 @@ class TransactionController @Autowired
 constructor(val transactionService: TransactionService) {
 
     val LOG = getLogger()
-    /**
-     * Retrieve all Transactions, which aren't in a block yet
-     * @return JSON list of Transactions
-     */
-    internal val transactionPool: Set<Transaction>
-        @RequestMapping
-        get() = transactionService.getTransactionPool()
+
+    @RequestMapping
+    fun pendingTx() = transactionService.getTransactionPool()
+
+
+    @RequestMapping("/valid")
+    fun validTx() = transactionService.getValidTransactions()
 
 
     /**

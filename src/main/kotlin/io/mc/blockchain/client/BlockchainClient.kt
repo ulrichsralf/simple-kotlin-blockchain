@@ -4,17 +4,17 @@ package io.mc.blockchain.client
 import feign.Feign
 import feign.Headers
 import feign.RequestLine
-import feign.gson.GsonEncoder
+import feign.jackson.JacksonEncoder
 import io.mc.blockchain.common.*
 import io.mc.blockchain.node.server.persistence.sha256Hash
 import io.mc.blockchain.node.server.utils.SignatureUtils
 import io.mc.blockchain.node.server.utils.getLogger
-import io.mc.blockchain.node.server.utils.toHexString
 import org.apache.commons.cli.*
 import org.apache.commons.codec.digest.DigestUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+
 //
 //fun main(args: Array<String>) {
 //    val client = BlockchainClient()
@@ -31,10 +31,10 @@ import java.nio.file.Paths
 //}
 
 
-class BlockchainClient( serverNode: String = "http://localhost:8080") {
+class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
 
-    private val restClient = Feign.builder().encoder(GsonEncoder()).target(Blockchain::class.java, serverNode)
+    private val restClient = Feign.builder().encoder(JacksonEncoder()).target(Blockchain::class.java, serverNode)
     private val LOG = getLogger()
 
     fun executeCommand(line: CommandLine) {
@@ -54,7 +54,7 @@ class BlockchainClient( serverNode: String = "http://localhost:8080") {
             if (message == null || sender == null || privatekey == null) {
                 throw ParseException("message, sender and privatekey is required")
             }
-            publishTransaction(generateTransaction( Paths.get(privatekey), message, sender))
+            publishTransaction(generateTransaction(Paths.get(privatekey), message, sender.toByteArray()))
         }
     }
 
@@ -104,18 +104,18 @@ class BlockchainClient( serverNode: String = "http://localhost:8080") {
 
     fun generateAddress(publicKey: Path): Address {
         val key = Files.readAllBytes(publicKey)
-        val hash = DigestUtils.sha256Hex(key)
-        return Address(hash, key.toHexString())
+        val hash = DigestUtils.sha256(key)
+        return Address(hash, key)
     }
 
-    fun generateTransaction(privateKey: Path, text: String, senderId: String): Transaction {
-        val out1 = TxOutputData(100,"VPF_Dollar", senderId,1)
+    fun generateTransaction(privateKey: Path, text: String, senderId: ByteArray): Transaction {
+        val out1 = TxOutputData(100, "VPF_Dollar", senderId, 1)
         val outHash = out1.sha256Hash()
 
-        val payload = TransactionData("hello blockchain",senderId, listOf(), listOf(TxOutput(outHash,out1)),System.currentTimeMillis())
+        val payload = TransactionData(text, senderId, listOf(), listOf(TxOutput(outHash, out1)), System.currentTimeMillis())
         val id = DigestUtils.sha256(payload.getSignedBytes())
         val signature = SignatureUtils.sign(id, Files.readAllBytes(privateKey))
-        return Transaction(id,signature, payload)
+        return Transaction(id, signature, payload)
     }
 
     fun publishAddress(address: Address) {

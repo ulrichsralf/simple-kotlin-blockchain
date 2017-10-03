@@ -3,7 +3,6 @@ package io.mc.blockchain.node.server.persistence
 import com.google.common.primitives.Longs
 import io.mc.blockchain.common.IHashedEntity
 import io.mc.blockchain.common.ISignable
-import io.mc.blockchain.common.ISignedEntity
 import io.mc.blockchain.common.Transaction
 import org.apache.commons.codec.digest.DigestUtils
 import java.util.*

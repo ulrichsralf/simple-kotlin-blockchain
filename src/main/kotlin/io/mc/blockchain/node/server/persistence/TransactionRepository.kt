@@ -1,6 +1,7 @@
 package io.mc.blockchain.node.server.persistence
 
 import io.mc.blockchain.common.Transaction
+import io.mc.blockchain.node.server.utils.toBase64String
 import org.springframework.stereotype.Component
 
 /**
@@ -10,23 +11,29 @@ import org.springframework.stereotype.Component
 @Component
 class TransactionRepository {
 
-    val map = mutableMapOf<ByteArray, Transaction>()
+    val pendingMap = mutableMapOf<String, Transaction>()
+    val validMap = mutableMapOf<String, Transaction>()
 
-    fun findAll(): List<Transaction> {
-        return map.values.toList()
+    fun getAllPending(): List<Transaction> {
+        return pendingMap.values.toList()
     }
 
-    fun save(transaction: Transaction): Transaction? {
-        map.put(transaction.hash!!, transaction)
+    fun getAllValid(): List<Transaction>{
+        return validMap.values.toList()
+    }
+
+    fun addNewTransaction(transaction: Transaction): Transaction? {
+        pendingMap.put(transaction.hash!!.toBase64String(), transaction)
         return transaction
     }
 
-    fun delete(transaction: Transaction) {
-        map.remove(transaction.hash)
+    fun moveToValid(transaction: Transaction) {
+        pendingMap.remove(transaction.hash!!.toBase64String())
+        validMap.put(transaction.hash!!.toBase64String(),transaction)
     }
 
-    fun exists(id: ByteArray): Boolean {
-        return map.containsKey(id)
+    fun isPending(id: ByteArray): Boolean {
+        return pendingMap.containsKey(id.toBase64String())
     }
 
 

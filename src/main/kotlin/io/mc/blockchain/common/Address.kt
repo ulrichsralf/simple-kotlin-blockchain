@@ -1,14 +1,13 @@
 package io.mc.blockchain.common
 
+import java.util.*
+
 data class Address(
+        var id: ByteArray? = null,
+        var publicKey: ByteArray? = null) {
 
-        var id: String? = null,
-        /**
-         * The public key for this Address to ensure everybody is able to verify signed messages
-         */
-        var publicKey: String? = null) {
-
-    override fun equals(o: Any?) = this === o || o is Address && id == o.id
+    override fun equals(other: Any?) = this === other
+            || other is Address && Arrays.equals(id, other.id)
     override fun hashCode() = id!!.hashCode()
 
 }

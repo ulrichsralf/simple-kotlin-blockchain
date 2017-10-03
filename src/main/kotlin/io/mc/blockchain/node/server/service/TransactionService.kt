@@ -19,22 +19,27 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
 
 
     fun getTransactionPool(): Set<Transaction> {
-        return transactionRepository.findAll().toSet()
+        return transactionRepository.getAllPending().toSet()
+    }
+
+
+    fun getValidTransactions(): Set<Transaction>{
+        return transactionRepository.getAllValid().toSet()
     }
 
     /**
      * Add a new Transaction to the pool
      */
     fun add(transaction: Transaction): Boolean {
-        return verify(transaction) && transactionRepository.save(transaction) != null
+        return verify(transaction) && transactionRepository.addNewTransaction(transaction) != null
     }
 
     /**
      * Remove Transaction from pool
-     * @param transaction Transaction to remove
+     * @param transaction Transaction to moveToValid
      */
-    fun remove(transaction: Transaction) {
-        transactionRepository.delete(transaction)
+    fun moveToValid(transaction: Transaction) {
+        transactionRepository.moveToValid(transaction)
     }
 
     /**
@@ -43,19 +48,19 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
      * @return true if all Transactions are member of the pool
      */
     fun containsAll(transactions: Collection<Transaction>): Boolean {
-        return transactions.all { transactionRepository.exists(it.hash!!) }
+        return transactions.all { transactionRepository.isPending(it.hash!!) }
     }
 
     private fun verify(transaction: Transaction): Boolean {
         // correct signature
-        val sender = addressRepository.findOne(transaction.hashData!!.senderId)
+        val sender = addressRepository.findOne(transaction.hashData!!.senderId!!)
         if (sender == null) {
             LOG.warn("Unknown address " + transaction.hashData!!.senderId)
             return false
         }
 
         try {
-            if (!SignatureUtils.verify(transaction, sender.publicKey!!.bytesFromHex())) {
+            if (!SignatureUtils.verify(transaction, sender.publicKey!!)) {
                 LOG.warn("Invalid signature")
                 return false
             }

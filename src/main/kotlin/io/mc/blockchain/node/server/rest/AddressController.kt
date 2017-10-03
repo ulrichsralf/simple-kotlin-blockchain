@@ -4,6 +4,7 @@ package io.mc.blockchain.node.server.rest
 import io.mc.blockchain.common.Address
 import io.mc.blockchain.node.server.persistence.AddressRepository
 import io.mc.blockchain.node.server.utils.getLogger
+import io.mc.blockchain.node.server.utils.toHexString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -26,7 +27,7 @@ class AddressController @Autowired constructor(val addressRepository: AddressRep
     @RequestMapping(method = arrayOf(RequestMethod.PUT))
     fun addAddress(@RequestBody address: Address, response: HttpServletResponse) {
         LOG.info("Add address " + address.id)
-        if (addressRepository.exists(address.id)) {
+        if (addressRepository.exists(address.id!!)) {
             response.status = HttpServletResponse.SC_NOT_ACCEPTABLE
         } else {
             addressRepository.save(address)

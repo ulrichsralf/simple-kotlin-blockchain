@@ -1,5 +1,7 @@
 package io.mc.blockchain.node.server.persistence
 
+import io.mc.blockchain.node.server.utils.toBase64String
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 /**
@@ -7,16 +9,17 @@ import org.springframework.stereotype.Component
  * 27.08.17
  */
 @Component
-class BlockRepository {
+class BlockRepository @Autowired constructor(val inout: InputOutputRepository) {
 
-    val map = mutableMapOf<ByteArray, Block>()
+    val map = mutableMapOf<String, Block>()
 
     fun findAll(): List<Block> {
         return map.values.toList()
     }
 
     fun save(block: Block) {
-        map.put(block.hash, block)
+        map.put(block.hash.toBase64String(), block)
+        inout.update(block)
     }
 
 
