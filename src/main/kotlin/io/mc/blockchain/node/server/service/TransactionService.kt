@@ -5,7 +5,6 @@ import io.mc.blockchain.node.server.persistence.AddressRepository
 import io.mc.blockchain.common.Transaction
 import io.mc.blockchain.node.server.persistence.TransactionRepository
 import io.mc.blockchain.node.server.utils.SignatureUtils
-import io.mc.blockchain.node.server.utils.bytesFromHex
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

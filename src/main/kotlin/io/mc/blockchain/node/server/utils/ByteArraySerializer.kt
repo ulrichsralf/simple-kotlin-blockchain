@@ -10,14 +10,14 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
 /**
  * ralf on 03.10.17.
  */
-class Base64UrlSerializer : StdSerializer<ByteArray>(ByteArray::class.java) {
+class ByteArraySerializer : StdSerializer<ByteArray>(ByteArray::class.java) {
     override fun serialize(value: ByteArray, jgen: JsonGenerator, provider: SerializerProvider?) {
-        jgen.writeString(value.toBase64String())
+        jgen.writeString(value.toByteString())
     }
 }
 
-class Base64UrlDeserializer : StdDeserializer<ByteArray>(ByteArray::class.java) {
+class ByteArrayDeserializer : StdDeserializer<ByteArray>(ByteArray::class.java) {
     override fun deserialize(parser: JsonParser, ctx: DeserializationContext?): ByteArray {
-        return parser.readValueAs(String::class.java).fromBase64String()
+        return parser.readValueAs(String::class.java).fromByteString()
     }
 }

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
-import io.mc.blockchain.node.server.utils.Base64UrlDeserializer
-import io.mc.blockchain.node.server.utils.Base64UrlSerializer
+import io.mc.blockchain.node.server.utils.ByteArrayDeserializer
+import io.mc.blockchain.node.server.utils.ByteArraySerializer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.HttpMessageConverter
@@ -38,8 +38,8 @@ class JacksonConfig : WebMvcConfigurationSupport() {
     companion object {
         fun getBase64Module(): Module {
             return SimpleModule("Base64Url").apply {
-                addSerializer(ByteArray::class.java, Base64UrlSerializer())
-                addDeserializer(ByteArray::class.java, Base64UrlDeserializer())
+                addSerializer(ByteArray::class.java, ByteArraySerializer())
+                addDeserializer(ByteArray::class.java, ByteArrayDeserializer())
             }
         }
     }

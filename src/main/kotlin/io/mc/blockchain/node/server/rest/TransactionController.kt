@@ -19,11 +19,11 @@ constructor(val transactionService: TransactionService) {
 
     val LOG = getLogger()
 
-    @RequestMapping
+    @RequestMapping("/pending")
     fun pendingTx() = transactionService.getTransactionPool()
 
 
-    @RequestMapping("/valid")
+    @RequestMapping
     fun validTx() = transactionService.getValidTransactions()
 
 

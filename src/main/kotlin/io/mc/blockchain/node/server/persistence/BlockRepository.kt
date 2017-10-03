@@ -1,6 +1,6 @@
 package io.mc.blockchain.node.server.persistence
 
-import io.mc.blockchain.node.server.utils.toBase64String
+import io.mc.blockchain.node.server.utils.toByteString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -18,7 +18,7 @@ class BlockRepository @Autowired constructor(val inout: InputOutputRepository) {
     }
 
     fun save(block: Block) {
-        map.put(block.hash.toBase64String(), block)
+        map.put(block.hash.toByteString(), block)
         inout.update(block)
     }
 

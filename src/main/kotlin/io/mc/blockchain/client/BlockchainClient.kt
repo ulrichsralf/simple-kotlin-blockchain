@@ -1,16 +1,18 @@
 package io.mc.blockchain.client
 
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import feign.Feign
 import feign.Headers
+import feign.Param
 import feign.RequestLine
+import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import io.mc.blockchain.common.*
 import io.mc.blockchain.node.server.config.JacksonConfig
 import io.mc.blockchain.node.server.persistence.sha256Hash
 import io.mc.blockchain.node.server.utils.SignatureUtils
 import io.mc.blockchain.node.server.utils.getLogger
+import io.mc.blockchain.node.server.utils.toByteString
 import org.apache.commons.cli.*
 import org.apache.commons.codec.digest.DigestUtils
 import java.nio.file.Files
@@ -36,10 +38,10 @@ import java.nio.file.Paths
 class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
 
-    private val restClient = Feign.builder().encoder(JacksonEncoder(ObjectMapper()
-            .apply {
-                registerModule(JacksonConfig.getBase64Module())
-            })).target(Blockchain::class.java, serverNode)
+    private val restClient = Feign.builder()
+            .encoder(JacksonEncoder(listOf(JacksonConfig.getBase64Module())))
+            .decoder(JacksonDecoder(listOf(JacksonConfig.getBase64Module())))
+            .target(Blockchain::class.java, serverNode)
     private val LOG = getLogger()
 
     fun executeCommand(line: CommandLine) {
@@ -132,6 +134,18 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
         restClient.addTransaction(transaction)
         LOG.info("Added $transaction")
     }
+
+    fun getAddress(id: ByteArray): Address{
+        return restClient.getAddress(id.toByteString())
+    }
+
+    fun getTransactions() : List<Transaction>{
+        return restClient.getTransactions()
+    }
+
+    fun getPendingTransactions() : List<Transaction>{
+        return restClient.getPendingTransactions()
+    }
 }
 
 
@@ -141,7 +155,22 @@ interface Blockchain {
     @Headers("Content-Type: application/json")
     fun addAddress(address: Address)
 
+    @RequestLine("GET /address/{id}")
+    @Headers("Content-Type: application/json")
+    fun getAddress(@Param("id") id: String) : Address
+
+
     @RequestLine("PUT /transaction")
     @Headers("Content-Type: application/json")
     fun addTransaction(transaction: Transaction)
+
+    @RequestLine("GET /transaction")
+    @Headers("Content-Type: application/json")
+    fun getTransactions(): List<Transaction>
+
+    @RequestLine("GET /transaction/pending")
+    @Headers("Content-Type: application/json")
+    fun getPendingTransactions(): List<Transaction>
+
+
 }

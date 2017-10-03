@@ -2,6 +2,7 @@ package io.mc.blockchain.common
 
 import java.util.*
 
+
 data class Address(
         var id: ByteArray? = null,
         var publicKey: ByteArray? = null) {

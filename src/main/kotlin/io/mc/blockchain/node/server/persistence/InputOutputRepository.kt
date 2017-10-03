@@ -2,7 +2,7 @@ package io.mc.blockchain.node.server.persistence
 
 import io.mc.blockchain.common.TxInput
 import io.mc.blockchain.common.TxOutput
-import io.mc.blockchain.node.server.utils.toBase64String
+import io.mc.blockchain.node.server.utils.toByteString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -23,13 +23,13 @@ class InputOutputRepository @Autowired constructor(val txRepo: TransactionReposi
     fun update(block: Block) {
         block.hashData.transactions.forEach { tx ->
             tx.hashData?.outputs?.forEach {
-                txInfoMap.getOrPut(it.hashData!!.receiverId!!.toBase64String(), { mutableListOf() }).add(TxInfo(tx.hash!!, it, null))
+                txInfoMap.getOrPut(it.hashData!!.receiverId!!.toByteString(), { mutableListOf() }).add(TxInfo(tx.hash!!, it, null))
             }
             tx.hashData?.inputs?.forEach { inp ->
-                val correspondingOut = txRepo.validMap.get(inp.hashData!!.txHash!!.toBase64String())?.hashData!!.outputs!!
+                val correspondingOut = txRepo.validMap.get(inp.hashData!!.txHash!!.toByteString())?.hashData!!.outputs!!
                         .filter { it.hashData!!.index == inp.hashData!!.index }
                         .first()
-                txInfoMap.getOrPut(correspondingOut.hashData!!.receiverId!!.toBase64String(), { mutableListOf() }).add(TxInfo(tx.hash!!, null, inp))
+                txInfoMap.getOrPut(correspondingOut.hashData!!.receiverId!!.toByteString(), { mutableListOf() }).add(TxInfo(tx.hash!!, null, inp))
             }
         }
     }

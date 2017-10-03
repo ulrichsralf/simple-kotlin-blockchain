@@ -15,7 +15,10 @@ class BlockchainTest {
     @Test
     fun testAddAddress() {
         client.generateKeyPair()
-        client.publishAddress(client.generateAddress( Paths.get("key.pub")))
+        val address = client.generateAddress( Paths.get("key.pub"))
+        client.publishAddress(address)
+        val returnedAddress = client.getAddress(address.id!!)
+        println(returnedAddress)
     }
 
     @Test
@@ -25,6 +28,7 @@ class BlockchainTest {
         client.publishAddress(address)
         val transaction = client.generateTransaction(Paths.get("key.priv"), "Hello Blockchain", address.id!!)
         client.publishTransaction(transaction)
+        println(client.getPendingTransactions())
 
     }
 

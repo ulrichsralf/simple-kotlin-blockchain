@@ -9,5 +9,5 @@ import org.slf4j.LoggerFactory
  */
 fun Any.getLogger() = LoggerFactory.getLogger(javaClass)
 
-fun ByteArray.toBase64String(): String = BaseEncoding.base64Url().encode(this)
-fun String.fromBase64String(): ByteArray = BaseEncoding.base64Url().decode(this)
+fun ByteArray.toByteString(): String = BaseEncoding.base16().lowerCase().encode(this)
+fun String.fromByteString(): ByteArray = BaseEncoding.base16().lowerCase().decode(this)
