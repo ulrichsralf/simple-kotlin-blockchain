@@ -9,30 +9,14 @@ import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import io.mc.blockchain.common.*
 import io.mc.blockchain.node.server.config.JacksonConfig
-import io.mc.blockchain.node.server.persistence.sha256Hash
 import io.mc.blockchain.node.server.utils.SignatureUtils
 import io.mc.blockchain.node.server.utils.getLogger
 import io.mc.blockchain.node.server.utils.toByteString
-import org.apache.commons.cli.*
 import org.apache.commons.codec.digest.DigestUtils
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-
-//
-//fun main(args: Array<String>) {
-//    val client = BlockchainClient()
-//    val parser = DefaultParser()
-//    val options = client.options
-//    try {
-//        val line = parser.parse(options, args)
-//        client.executeCommand(line)
-//    } catch (e: ParseException) {
-//        System.err.println(e.message)
-//        val formatter = HelpFormatter()
-//        formatter.printHelp("BlockchainClient", options, true)
-//    }
-//}
+import java.security.KeyPair
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.util.*
 
 
 class BlockchainClient(serverNode: String = "http://localhost:8080") {
@@ -44,85 +28,14 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
             .target(Blockchain::class.java, serverNode)
     private val LOG = getLogger()
 
-    fun executeCommand(line: CommandLine) {
-        if (line.hasOption("keypair")) {
-            generateKeyPair()
-        } else if (line.hasOption("address")) {
-            val publickey = line.getOptionValue("publickey")
-            if (publickey == null) {
-                throw ParseException("publickey is required")
-            }
-            publishAddress(generateAddress(Paths.get(publickey)))
 
-        } else if (line.hasOption("transaction")) {
-            val message = line.getOptionValue("message")
-            val sender = line.getOptionValue("sender")
-            val privatekey = line.getOptionValue("privatekey")
-            if (message == null || sender == null || privatekey == null) {
-                throw ParseException("message, sender and privatekey is required")
-            }
-            publishTransaction(generateTransaction(Paths.get(privatekey), message, sender.toByteArray()))
-        }
+    fun generateKeyPair(): KeyPair {
+        return SignatureUtils.generateKeyPair()
     }
 
-    val options: Options
-        get() {
-            val actions = OptionGroup()
-            actions.addOption(Option("k", "keypair", false, "generate private/public key pair"))
-            actions.addOption(Option("a", "address", false, "publish new address"))
-            actions.addOption(Option("t", "transaction", false, "publish new transaction"))
-            actions.isRequired = true
-
-            val options = Options()
-            options.addOptionGroup(actions)
-            options.addOption(Option.builder("p")
-                    .longOpt("publickey")
-                    .hasArg()
-                    .argName("path to key file")
-                    .desc("needed for address publishing")
-                    .build())
-            options.addOption(Option.builder("v")
-                    .longOpt("privatekey")
-                    .hasArg()
-                    .argName("path to key file")
-                    .desc("needed for transaction publishing")
-                    .build())
-            options.addOption(Option.builder("m")
-                    .longOpt("message")
-                    .hasArg()
-                    .argName("message to post")
-                    .desc("needed for transaction publishing")
-                    .build())
-            options.addOption(Option.builder("s")
-                    .longOpt("sender")
-                    .hasArg()
-                    .argName("address hash (Base16)")
-                    .desc("needed for transaction publishing")
-                    .build())
-
-            return options
-        }
-
-    fun generateKeyPair() {
-        val keyPair = SignatureUtils.generateKeyPair()
-        Files.write(Paths.get("key.priv"), keyPair.getPrivate().getEncoded())
-        Files.write(Paths.get("key.pub"), keyPair.getPublic().getEncoded())
-    }
-
-    fun generateAddress(publicKey: Path): Address {
-        val key = Files.readAllBytes(publicKey)
-        val hash = DigestUtils.sha256(key)
-        return Address(hash, key)
-    }
-
-    fun generateTransaction(privateKey: Path, text: String, senderId: ByteArray): Transaction {
-        val out1 = TxOutputData(100, "VPF_Dollar", senderId, 1)
-        val outHash = out1.sha256Hash()
-
-        val payload = TransactionData(text, senderId, listOf(), listOf(TxOutput(outHash, out1)), System.currentTimeMillis())
-        val id = DigestUtils.sha256(payload.getSignedBytes())
-        val signature = SignatureUtils.sign(id, Files.readAllBytes(privateKey))
-        return Transaction(id, signature, payload)
+    fun generateAddress(key: PublicKey): Address {
+        val hash = DigestUtils.sha256(key.encoded)
+        return Address(hash, key.encoded)
     }
 
     fun publishAddress(address: Address) {
@@ -135,15 +48,63 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
         LOG.info("Added $transaction")
     }
 
-    fun getAddress(id: ByteArray): Address{
-        return restClient.getAddress(id.toByteString())
+    fun transfer(privateKey: PrivateKey,
+                 currency: String,
+                 value: Long,
+                 from: Address,
+                 to: Address,
+                 comment: String) {
+
+        val txIn = getTransactions()
+                .filter {
+                    Arrays.equals(it.hashData?.senderId, from.id) &&
+                            it.hashData?.outputs.orEmpty()
+                                    .any { it.hashData?.type == currency }
+                }
+        val firstIn = txIn.takeWhile {
+            it.hashData?.outputs.orEmpty()
+                    .filter { it.hashData?.type == currency }
+                    .sumByDouble { (it.hashData?.value ?: 0).toDouble() } >= value
+        }
+
+        var totalIn = 0L
+        val inputs = firstIn.map { tx ->
+            tx.hashData!!.outputs.orEmpty().map {
+                totalIn += it.hashData!!.value!!
+                TxInputData(it.hashData!!.value, it.hashData!!.type, tx.hash, it.hashData!!.index).toInput(privateKey)
+            }
+
+        }.flatten()
+        val diff = totalIn - value
+        if (diff < 0) throw IllegalStateException("not enough deposit")
+        val out = mutableListOf(TxOutputData(value, currency, to.id, 1).toOutput())
+        if (diff > 0) {
+            out.add(TxOutputData(diff,currency,from.id,2).toOutput())
+        }
+
+        val payload = TransactionData(comment, from.id, inputs, out, System.currentTimeMillis())
+        val id = DigestUtils.sha256(payload.getSignedBytes())
+        val signature = SignatureUtils.sign(id, privateKey.encoded)
+        publishTransaction(  Transaction(id, signature, payload))
     }
 
-    fun getTransactions() : List<Transaction>{
+    fun initTx(privateKey: PrivateKey,currency: String,value: Long,comment: String,to: Address){
+        val payload = TransactionData(comment, to.id, listOf(), listOf(TxOutputData(value,currency,to.id,1).toOutput()), System.currentTimeMillis())
+        val id = DigestUtils.sha256(payload.getSignedBytes())
+        val signature = SignatureUtils.sign(id, privateKey.encoded)
+        publishTransaction(  Transaction(id, signature, payload))
+    }
+
+    fun getAddress(id: ByteArray): Address {
+        return restClient.getAddress(id.toByteString())
+                ?: throw IllegalArgumentException("address ${id.toByteString()} not found")
+    }
+
+    fun getTransactions(): List<Transaction> {
         return restClient.getTransactions()
     }
 
-    fun getPendingTransactions() : List<Transaction>{
+    fun getPendingTransactions(): List<Transaction> {
         return restClient.getPendingTransactions()
     }
 }
@@ -157,7 +118,7 @@ interface Blockchain {
 
     @RequestLine("GET /address/{id}")
     @Headers("Content-Type: application/json")
-    fun getAddress(@Param("id") id: String) : Address
+    fun getAddress(@Param("id") id: String): Address?
 
 
     @RequestLine("PUT /transaction")

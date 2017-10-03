@@ -1,7 +1,6 @@
 package io.mc.blockchain.client
 
 import org.junit.Test
-import java.nio.file.Paths
 
 /**
  * @author Ralf Ulrich
@@ -14,21 +13,27 @@ class BlockchainTest {
 
     @Test
     fun testAddAddress() {
-        client.generateKeyPair()
-        val address = client.generateAddress( Paths.get("key.pub"))
+        val pub = client.generateKeyPair().public
+        val address = client.generateAddress(pub)
         client.publishAddress(address)
         val returnedAddress = client.getAddress(address.id!!)
         println(returnedAddress)
     }
 
     @Test
-    fun testAddTransaction(){
-        client.generateKeyPair()
-        val address = client.generateAddress(Paths.get("key.pub"))
+    fun testAddTransaction() {
+        val keyPair = client.generateKeyPair()
+        val address = client.generateAddress(keyPair.public)
         client.publishAddress(address)
-        val transaction = client.generateTransaction(Paths.get("key.priv"), "Hello Blockchain", address.id!!)
-        client.publishTransaction(transaction)
+        client.initTx(keyPair.private, "VPF",100,"Hello Blockchain", address)
+        //client.publishTransaction(transaction)
         println(client.getPendingTransactions())
+        Thread.sleep(10000)
+
+        val other = client.generateKeyPair()
+        val otherAddress = client.generateAddress(other.public)
+        client.transfer(keyPair.private,"VPF",50,address,otherAddress,"Here you go!")
+
 
     }
 
