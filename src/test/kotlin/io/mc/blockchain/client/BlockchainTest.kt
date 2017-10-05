@@ -9,7 +9,7 @@ import org.junit.Test
 class BlockchainTest {
 
 
-    val client = BlockchainClient("http://localhost:8080")
+    val client = BlockchainClient("http://vpf.mind-score.de")
 
     @Test
     fun testAddAddress() {
@@ -22,7 +22,7 @@ class BlockchainTest {
 
     @Test
     fun testAddTransaction() {
-        for (i in 1..10){
+
             val keyPair = client.generateKeyPair()
             val address = client.generateAddress(keyPair.public)
             client.publishAddress(address)
@@ -36,9 +36,6 @@ class BlockchainTest {
             client.transfer(keyPair.private,"VPF",50,address,otherAddress,"Here you go!")
             println(client.getTransactions(address))
             println(client.getPendingTransactions(address))
-        }
-
-
 
     }
 
