@@ -79,20 +79,32 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
         if (diff < 0) throw IllegalStateException("not enough deposit")
         val out = mutableListOf(TxOutputData(value, currency, to.id, 1).toOutput())
         if (diff > 0) {
-            out.add(TxOutputData(diff,currency,from.id,2).toOutput())
+            out.add(TxOutputData(diff, currency, from.id, 2).toOutput())
         }
 
         val payload = TransactionData(comment, from.id, inputs, out, System.currentTimeMillis())
         val id = DigestUtils.sha256(payload.getSignedBytes())
         val signature = SignatureUtils.sign(id, privateKey.encoded)
-        publishTransaction(  Transaction(id, signature, payload))
+        publishTransaction(Transaction(id, signature, payload))
     }
 
-    fun initTx(privateKey: PrivateKey,currency: String,value: Long,comment: String,to: Address){
-        val payload = TransactionData(comment, to.id, listOf(), listOf(TxOutputData(value,currency,to.id,1).toOutput()), System.currentTimeMillis())
+    fun initTx(privateKey: PrivateKey, currency: String, value: Long, comment: String, to: Address) {
+        val payload = TransactionData(comment, to.id, listOf(), listOf(TxOutputData(value, currency, to.id, 1).toOutput()), System.currentTimeMillis())
         val id = DigestUtils.sha256(payload.getSignedBytes())
         val signature = SignatureUtils.sign(id, privateKey.encoded)
-        publishTransaction(  Transaction(id, signature, payload))
+        publishTransaction(Transaction(id, signature, payload))
+    }
+
+
+    fun getBalance(address: Address): Map<String, Long> {
+        val result = mutableMapOf<String, Long>()
+        getTransactions(address).forEach{
+            it.hashData?.inputs?.forEach {
+
+            }
+
+        }
+        TODO()
     }
 
     fun getAddress(id: ByteArray): Address {
@@ -100,12 +112,12 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
                 ?: throw IllegalArgumentException("address ${id.toByteString()} not found")
     }
 
-    fun getTransactions(): List<Transaction> {
-        return restClient.getTransactions()
+    fun getTransactions(address: Address? = null): List<Transaction> {
+        return restClient.getTransactions(address?.id?.toByteString())
     }
 
-    fun getPendingTransactions(): List<Transaction> {
-        return restClient.getPendingTransactions()
+    fun getPendingTransactions(address: Address? = null): List<Transaction> {
+        return restClient.getPendingTransactions(address?.id?.toByteString())
     }
 }
 
@@ -127,11 +139,11 @@ interface Blockchain {
 
     @RequestLine("GET /transaction")
     @Headers("Content-Type: application/json")
-    fun getTransactions(): List<Transaction>
+    fun getTransactions(@Param("senderId") senderId: String? = null): List<Transaction>
 
     @RequestLine("GET /transaction/pending")
     @Headers("Content-Type: application/json")
-    fun getPendingTransactions(): List<Transaction>
+    fun getPendingTransactions(@Param("senderId") senderId: String? = null): List<Transaction>
 
 
 }

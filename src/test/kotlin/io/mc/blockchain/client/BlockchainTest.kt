@@ -9,7 +9,7 @@ import org.junit.Test
 class BlockchainTest {
 
 
-    val client = BlockchainClient("http://vpf.mind-score.de")
+    val client = BlockchainClient("http://localhost:8080")
 
     @Test
     fun testAddAddress() {
@@ -22,17 +22,22 @@ class BlockchainTest {
 
     @Test
     fun testAddTransaction() {
-        val keyPair = client.generateKeyPair()
-        val address = client.generateAddress(keyPair.public)
-        client.publishAddress(address)
-        client.initTx(keyPair.private, "VPF",100,"Hello Blockchain", address)
-        //client.publishTransaction(transaction)
-        println(client.getPendingTransactions())
-        Thread.sleep(10000)
+        for (i in 1..10){
+            val keyPair = client.generateKeyPair()
+            val address = client.generateAddress(keyPair.public)
+            client.publishAddress(address)
+            client.initTx(keyPair.private, "VPF",100,"Hello Blockchain", address)
+            //client.publishTransaction(transaction)
+           // println(client.getPendingTransactions())
+            Thread.sleep(10000)
 
-        val other = client.generateKeyPair()
-        val otherAddress = client.generateAddress(other.public)
-        client.transfer(keyPair.private,"VPF",50,address,otherAddress,"Here you go!")
+            val other = client.generateKeyPair()
+            val otherAddress = client.generateAddress(other.public)
+            client.transfer(keyPair.private,"VPF",50,address,otherAddress,"Here you go!")
+            println(client.getTransactions(address))
+            println(client.getPendingTransactions(address))
+        }
+
 
 
     }

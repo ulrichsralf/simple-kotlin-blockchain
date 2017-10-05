@@ -2,6 +2,7 @@ package io.mc.blockchain.node.server.rest
 
 
 import io.mc.blockchain.common.Address
+import io.mc.blockchain.node.server.exceptions.ResourceNotFound
 import io.mc.blockchain.node.server.persistence.AddressRepository
 import io.mc.blockchain.node.server.utils.fromByteString
 import io.mc.blockchain.node.server.utils.getLogger
@@ -24,8 +25,16 @@ class AddressController @Autowired constructor(val addressRepository: AddressRep
 
     @RequestMapping("/{id}")
     fun addresse(@PathVariable("id") id: String): Address? {
-        return addressRepository.findOne(id.fromByteString())
+        return try {
+            addressRepository.findOne(id.fromByteString()) ?: throw ResourceNotFound()
+        } catch (e: IllegalArgumentException) {
+            throw ResourceNotFound()
+        }
+
     }
+
+
+
 
     @RequestMapping(method = arrayOf(RequestMethod.PUT))
     fun addAddress(@RequestBody address: Address, response: HttpServletResponse) {

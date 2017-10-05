@@ -2,13 +2,13 @@ package io.mc.blockchain.node.server.rest
 
 
 import io.mc.blockchain.common.Transaction
+import io.mc.blockchain.node.server.exceptions.ResourceNotFound
 import io.mc.blockchain.node.server.service.TransactionService
+import io.mc.blockchain.node.server.utils.fromByteString
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import java.util.*
 import javax.servlet.http.HttpServletResponse
 
 
@@ -20,11 +20,25 @@ constructor(val transactionService: TransactionService) {
     val LOG = getLogger()
 
     @RequestMapping("/pending")
-    fun pendingTx() = transactionService.getTransactionPool()
+    fun pendingTx(@RequestParam("senderId", required = false) senderId: String? = null) =
+            transactionService.getPendingTransactions(senderId)
 
 
-    @RequestMapping
-    fun validTx() = transactionService.getValidTransactions()
+    @RequestMapping()
+    fun validTx(@RequestParam("senderId", required = false) senderId: String? = null) =
+            transactionService.getValidTransactions(senderId)
+
+
+    @RequestMapping("/{id}")
+    fun validTxById(@PathVariable("id") id: String): Transaction? {
+        return try {
+            transactionService.getValidTransactions().first { Arrays.equals(it.hash, id.fromByteString()) }
+        } catch (e: IllegalArgumentException) {
+            throw ResourceNotFound()
+        } catch (e: NoSuchElementException) {
+            throw ResourceNotFound()
+        }
+    }
 
 
     /**

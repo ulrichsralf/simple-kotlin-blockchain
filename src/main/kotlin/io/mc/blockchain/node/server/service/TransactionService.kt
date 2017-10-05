@@ -1,13 +1,15 @@
 package io.mc.blockchain.node.server.service
 
 
-import io.mc.blockchain.node.server.persistence.AddressRepository
 import io.mc.blockchain.common.Transaction
+import io.mc.blockchain.node.server.persistence.AddressRepository
 import io.mc.blockchain.node.server.persistence.TransactionRepository
 import io.mc.blockchain.node.server.utils.SignatureUtils
+import io.mc.blockchain.node.server.utils.fromByteString
 import io.mc.blockchain.node.server.utils.getLogger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
 
 
 @Service
@@ -21,10 +23,23 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
         return transactionRepository.getAllPending().toSet()
     }
 
-
-    fun getValidTransactions(): Set<Transaction>{
-        return transactionRepository.getAllValid().toSet()
+    fun getPendingTransactions(senderId: String? = null): List<Transaction> {
+        return transactionRepository.getAllPending().filter { containsAddress(senderId, it) }
     }
+
+    private fun containsAddress(senderId: String?, tx: Transaction): Boolean {
+        val byteSenderId = senderId?.fromByteString()
+        return senderId == null ||
+                Arrays.equals(tx.hashData?.senderId, byteSenderId) ||
+                tx.hashData?.outputs?.any {
+                    Arrays.equals(it.hashData?.receiverId, byteSenderId)
+                } ?: false
+    }
+
+    fun getValidTransactions(senderId: String? = null): List<Transaction> {
+        return transactionRepository.getAllValid().filter { containsAddress(senderId, it) }
+    }
+
 
     /**
      * Add a new Transaction to the pool
