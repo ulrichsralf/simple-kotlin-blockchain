@@ -98,13 +98,16 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
     fun getBalance(address: Address): Map<String, Long> {
         val result = mutableMapOf<String, Long>()
-        getTransactions(address).forEach{
-            it.hashData?.inputs?.forEach {
-
+        getTransactions(address).forEach {
+            it.hashData?.outputs?.forEach {
+                if (!Arrays.equals(it.hashData?.receiverId, address.id)) {
+                    result.compute(it.hashData?.type!!, { type, value -> value ?: 0 - it.hashData?.value!! })
+                }else{
+                    result.compute(it.hashData?.type!!, { type, value -> value ?: 0 + it.hashData?.value!! })
+                }
             }
-
         }
-        TODO()
+        return result
     }
 
     fun getAddress(id: ByteArray): Address {
