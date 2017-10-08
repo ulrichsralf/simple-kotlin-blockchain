@@ -70,8 +70,8 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
         var totalIn = 0L
         val inputs = firstIn.map { tx ->
             tx.hashData!!.outputs.orEmpty().map {
-                totalIn += it.hashData!!.value!!
-                TxInputData(it.hashData!!.value, it.hashData!!.type, tx.hash, it.hashData!!.index).toInput(privateKey)
+                totalIn += it.value
+                TxInputData(it.value, it.type, tx.hash, it.hashData!!.index).toInput(privateKey)
             }
 
         }.flatten()
@@ -97,16 +97,21 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
 
     fun getBalance(address: Address): Map<String, Long> {
+        val txResult = mutableMapOf<TxDataKey, Pair<String, Long>>()
         val result = mutableMapOf<String, Long>()
-        getTransactions(address).forEach {
-            it.hashData?.outputs?.forEach {
-                if (!Arrays.equals(it.hashData?.receiverId, address.id)) {
-                    result.compute(it.hashData?.type!!, { type, value -> value ?: 0 - it.hashData?.value!! })
-                }else{
-                    result.compute(it.hashData?.type!!, { type, value -> value ?: 0 + it.hashData?.value!! })
+        getTransactions(address).forEach { tx ->
+            println(tx.hash?.toByteString())
+            tx.hashData?.inputs?.forEach {
+                txResult.remove(TxDataKey(it.hashData!!.txHash!!.toByteString(), it.index))
+            }
+            tx.hashData?.outputs?.forEach {
+                if (Arrays.equals(it.hashData?.receiverId, address.id)) {
+                    txResult.put(TxDataKey(tx.hash!!.toByteString(), it.index), it.type to it.value)
                 }
             }
+
         }
+        txResult.forEach { k, v -> result.compute(v.first, { type, value -> (value ?: 0) + v.second }) }
         return result
     }
 
@@ -124,6 +129,14 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
     }
 }
 
+val TxInput.type: String get() = hashData!!.type!!
+val TxInput.index: Int get() = hashData!!.index!!
+val TxOutput.index: Int get() = hashData!!.index!!
+val TxOutput.type: String get() = hashData!!.type!!
+val TxInput.value: Long get() = hashData!!.value ?: 0
+val TxOutput.value: Long get() = hashData!!.value ?: 0
+
+data class TxDataKey(val tx: String, val index: Int)
 
 interface Blockchain {
 
@@ -140,11 +153,11 @@ interface Blockchain {
     @Headers("Content-Type: application/json")
     fun addTransaction(transaction: Transaction)
 
-    @RequestLine("GET /transaction")
+    @RequestLine("GET /transaction?senderId={senderId}")
     @Headers("Content-Type: application/json")
     fun getTransactions(@Param("senderId") senderId: String? = null): List<Transaction>
 
-    @RequestLine("GET /transaction/pending")
+    @RequestLine("GET /transaction/pending?senderId={senderId}")
     @Headers("Content-Type: application/json")
     fun getPendingTransactions(@Param("senderId") senderId: String? = null): List<Transaction>
 

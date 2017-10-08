@@ -1,5 +1,6 @@
 package io.mc.blockchain.client
 
+import io.mc.blockchain.node.server.utils.toByteString
 import org.junit.Test
 
 /**
@@ -23,19 +24,28 @@ class BlockchainTest {
     @Test
     fun testAddTransaction() {
 
-            val keyPair = client.generateKeyPair()
-            val address = client.generateAddress(keyPair.public)
-            client.publishAddress(address)
-            client.initTx(keyPair.private, "VPF",100,"Hello Blockchain", address)
-            //client.publishTransaction(transaction)
-           // println(client.getPendingTransactions())
-            Thread.sleep(10000)
+        val keyPair = client.generateKeyPair()
+        val address = client.generateAddress(keyPair.public)
+        println(address.id!!.toByteString())
+        client.publishAddress(address)
+        client.initTx(keyPair.private, "VPF", 100, "Hello Blockchain", address)
+        //client.publishTransaction(transaction)
+        println(client.getPendingTransactions().count())
+        println(client.getTransactions().count())
+        Thread.sleep(10000)
+        println(client.getBalance(address))
 
-            val other = client.generateKeyPair()
-            val otherAddress = client.generateAddress(other.public)
-            client.transfer(keyPair.private,"VPF",50,address,otherAddress,"Here you go!")
-            println(client.getTransactions(address))
-            println(client.getPendingTransactions(address))
+        val other = client.generateKeyPair()
+        val otherAddress = client.generateAddress(other.public)
+        client.transfer(keyPair.private, "VPF", 50, address, otherAddress, "Here you go!")
+
+        Thread.sleep(10000)
+
+
+        println(client.getTransactions(address).count())
+       // println(client.getPendingTransactions(address))
+        println(client.getBalance(address))
+        println(client.getBalance(otherAddress))
 
     }
 
