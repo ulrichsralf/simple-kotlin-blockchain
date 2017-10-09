@@ -55,7 +55,7 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
                  to: Address,
                  comment: String) {
 
-        val txIn = getTransactions()
+        val txIn = getTransactions(from)
                 .filter {
                     Arrays.equals(it.hashData?.senderId, from.id) &&
                             it.hashData?.outputs.orEmpty()
@@ -100,7 +100,7 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
         val txResult = mutableMapOf<TxDataKey, Pair<String, Long>>()
         val result = mutableMapOf<String, Long>()
         getTransactions(address).forEach { tx ->
-            println(tx.hash?.toByteString())
+           // println(tx.hash?.toByteString())
             tx.hashData?.inputs?.forEach {
                 txResult.remove(TxDataKey(it.hashData!!.txHash!!.toByteString(), it.index))
             }

@@ -1,6 +1,7 @@
 package io.mc.blockchain.client
 
 import io.mc.blockchain.node.server.utils.toByteString
+import junit.framework.Assert.assertEquals
 import org.junit.Test
 
 /**
@@ -9,8 +10,9 @@ import org.junit.Test
  */
 class BlockchainTest {
 
+    val currency = "VPF"
 
-    val client = BlockchainClient("http://vpf.mind-score.de")
+    val client = BlockchainClient("http://localhost:8080")
 
     @Test
     fun testAddAddress() {
@@ -22,31 +24,59 @@ class BlockchainTest {
     }
 
     @Test
-    fun testAddTransaction() {
+    fun testTransfer() {
 
         val keyPair = client.generateKeyPair()
-        val address = client.generateAddress(keyPair.public)
-        println(address.id!!.toByteString())
-        client.publishAddress(address)
-        client.initTx(keyPair.private, "VPF", 100, "Hello Blockchain", address)
-        //client.publishTransaction(transaction)
-        println(client.getPendingTransactions().count())
-        println(client.getTransactions().count())
-        Thread.sleep(10000)
-        println(client.getBalance(address))
+        val address1 = client.generateAddress(keyPair.public)
+
+        client.publishAddress(address1)
+        client.initTx(keyPair.private, currency, 100, "Hello Blockchain", address1)
+        client.await()
+        assertEquals(100L, client.getBalance(address1)[currency])
 
         val other = client.generateKeyPair()
         val otherAddress = client.generateAddress(other.public)
-        client.transfer(keyPair.private, "VPF", 50, address, otherAddress, "Here you go!")
+        client.transfer(keyPair.private, currency, 50, address1, otherAddress, "Here you go!")
+        client.await()
 
-        Thread.sleep(10000)
-
-
-        println(client.getTransactions(address).count())
-       // println(client.getPendingTransactions(address))
-        println(client.getBalance(address))
-        println(client.getBalance(otherAddress))
+        assertEquals(50L, client.getBalance(address1)[currency])
+        assertEquals(50L, client.getBalance(otherAddress)[currency])
 
     }
 
+    @Test
+    fun testTransferMulti() {
+
+        val keyPair = client.generateKeyPair()
+        val address1 = client.generateAddress(keyPair.public)
+
+        client.publishAddress(address1)
+        println(address1.id!!.toByteString())
+        client.initTx(keyPair.private, currency, 100, "Hello Blockchain", address1)
+        client.await()
+        assertEquals(100L, client.getBalance(address1)[currency])
+        val other = client.generateKeyPair()
+        val otherAddress = client.generateAddress(other.public)
+
+        for (i in 1 until 100) {
+            client.transfer(keyPair.private, currency, 1, address1, otherAddress, "Here you go!")
+            client.await()
+            println(client.getBalance(address1))
+            println(client.getBalance(otherAddress))
+        }
+
+        client.await()
+
+        assertEquals(0L, client.getBalance(address1)[currency])
+        assertEquals(100L, client.getBalance(otherAddress)[currency])
+
+    }
+
+
+}
+
+fun BlockchainClient.await() {
+    while (getPendingTransactions().size != 0) {
+        Thread.sleep(1000)
+    }
 }

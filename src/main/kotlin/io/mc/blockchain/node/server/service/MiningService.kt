@@ -41,8 +41,8 @@ constructor(private val transactionService: TransactionService, private val bloc
 
         // sleep if no more transactions left
         if (transactions.isEmpty()) {
-            LOG.info("No transactions available, pausing")
-            Thread.sleep(10000)
+           // LOG.info("No transactions available, pausing")
+            Thread.sleep(100)
             return null
         }
         LOG.info("Start mining new block")
