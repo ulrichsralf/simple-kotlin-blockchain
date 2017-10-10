@@ -55,26 +55,21 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
                  to: Address,
                  comment: String) {
 
-        val txIn = getTransactions(from)
-                .filter {
-                    Arrays.equals(it.hashData?.senderId, from.id) &&
-                            it.hashData?.outputs.orEmpty()
-                                    .any { it.hashData?.type == currency }
-                }
-        val firstIn = txIn.takeWhile {
-            it.hashData?.outputs.orEmpty()
-                    .filter { it.hashData?.type == currency }
-                    .sumByDouble { (it.hashData?.value ?: 0).toDouble() } >= value
-        }
+        val txIn = restClient.getUnspend(from.id!!.toByteString())
+        var sum = 0L
+        val firstIn = txIn
+                .filter { it.type == currency  }
+                .sortedBy { it.value }
+                .takeWhile { sum += it.value; sum > value}
+
 
         var totalIn = 0L
-        val inputs = firstIn.map { tx ->
-            tx.hashData!!.outputs.orEmpty().map {
-                totalIn += it.value
-                TxInputData(it.value, it.type, tx.hash, it.hashData!!.index).toInput(privateKey)
-            }
+        val inputs = firstIn.map {
+            totalIn += it.value
+                TxInputData(it.value, it.type, it.hashData!!.txHash, it.index).toInput(privateKey)
 
-        }.flatten()
+
+        }
         val diff = totalIn - value
         if (diff < 0) throw IllegalStateException("not enough deposit")
         val out = mutableListOf(TxOutputData(value, currency, to.id, 1).toOutput())
@@ -97,22 +92,7 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
 
     fun getBalance(address: Address): Map<String, Long> {
-        val txResult = mutableMapOf<TxDataKey, Pair<String, Long>>()
-        val result = mutableMapOf<String, Long>()
-        getTransactions(address).forEach { tx ->
-           // println(tx.hash?.toByteString())
-            tx.hashData?.inputs?.forEach {
-                txResult.remove(TxDataKey(it.hashData!!.txHash!!.toByteString(), it.index))
-            }
-            tx.hashData?.outputs?.forEach {
-                if (Arrays.equals(it.hashData?.receiverId, address.id)) {
-                    txResult.put(TxDataKey(tx.hash!!.toByteString(), it.index), it.type to it.value)
-                }
-            }
-
-        }
-        txResult.forEach { k, v -> result.compute(v.first, { type, value -> (value ?: 0) + v.second }) }
-        return result
+        return restClient.getBalance(address.id!!.toByteString())
     }
 
     fun getAddress(id: ByteArray): Address {
@@ -148,6 +128,13 @@ interface Blockchain {
     @Headers("Content-Type: application/json")
     fun getAddress(@Param("id") id: String): Address?
 
+    @RequestLine("GET /balance/{id}")
+    @Headers("Content-Type: application/json")
+    fun getBalance(@Param("id") id: String): Map<String, Long>
+
+    @RequestLine("GET /unspend/{id}")
+    @Headers("Content-Type: application/json")
+    fun getUnspend(@Param("id") id: String): List<TxOutput>
 
     @RequestLine("PUT /transaction")
     @Headers("Content-Type: application/json")

@@ -52,7 +52,6 @@ data class TxInputData(
                     type!!.toByteArray() +
                     txHash!! +
                     index!!.toByte()
-
 }
 
 
@@ -64,7 +63,8 @@ data class TxOutputData(
         var value: Long? = null,
         var type: String? = null,
         var receiverId: ByteArray? = null,
-        var index: Int? = null
+        var index: Int? = null,
+        var txHash: ByteArray? = null
 
 ) : ISignable {
     override fun getSignedBytes() =
