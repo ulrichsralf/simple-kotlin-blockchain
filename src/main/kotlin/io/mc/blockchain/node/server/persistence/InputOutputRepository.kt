@@ -25,15 +25,12 @@ class InputOutputRepository @Autowired constructor(val txRepo: TransactionReposi
         block.hashData.transactions.forEach { tx ->
             tx.hashData?.outputs?.forEach {
                 val outWithTx = it.addTxHash(tx.hash)
-                println("add " +it.hashData!!.receiverId!!.toByteString() +" " + it)
-                //txInfoMap.getOrPut(it.hashData!!.receiverId!!.toByteString(), { mutableListOf() }).add(it)
                 unspendMap.getOrPut(it.hashData!!.receiverId!!.toByteString(), { mutableListOf() }).add(outWithTx)
                 txIndex.put(tx.hash!!.toByteString() + it.index, outWithTx)
             }
             tx.hashData?.inputs?.forEach { inp ->
                 val oldOut = txIndex[inp.hashData!!.txHash!!.toByteString() + inp.index] ?: throw IllegalArgumentException("Input is not valid: $inp")
                 val removed = unspendMap.getOrPut(oldOut.hashData!!.receiverId!!.toByteString(), { mutableListOf() }).remove(oldOut)
-                println("remove " +oldOut.hashData!!.receiverId!!.toByteString() +" " + oldOut)
                 if(!removed)throw IllegalArgumentException("Input $inp not valid")
             }
         }

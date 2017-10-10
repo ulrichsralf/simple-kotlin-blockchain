@@ -19,7 +19,7 @@ constructor(val inputOutputRepository: InputOutputRepository) {
     @RequestMapping("balance/{id}")
     fun getBalance(@PathVariable("id") id: String): Map<String, Long> {
         return inputOutputRepository.findUnspend(id).map { it.type to it.value }
-                .fold(mutableMapOf(), { map, pair -> map.apply { compute(pair.first, { k, v -> v ?: 0 + pair.second }) } })
+                .fold(mutableMapOf(), { map, pair -> map.apply { compute(pair.first, { k, v -> (v ?: 0) + pair.second }) } })
     }
 
     @RequestMapping("unspend/{id}")
