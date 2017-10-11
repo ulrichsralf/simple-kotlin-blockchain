@@ -11,7 +11,7 @@ class BlockchainTest {
 
     val currency = "VPF"
 
-    val client = BlockchainClient("http://vpf.mind-score.de:8080")
+    val client = BlockchainClient("http://vpf.mind-score.de")
 
     @Test
     fun testAddAddress() {
