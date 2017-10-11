@@ -16,7 +16,6 @@ import org.apache.commons.codec.digest.DigestUtils
 import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.PublicKey
-import java.util.*
 
 
 class BlockchainClient(serverNode: String = "http://localhost:8080") {
@@ -58,15 +57,15 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
         val txIn = restClient.getUnspend(from.id!!.toByteString())
         var sum = 0L
         val firstIn = txIn
-                .filter { it.type == currency  }
+                .filter { it.type == currency }
                 .sortedBy { it.value }
-                .takeWhile { sum += it.value; sum > value}
+                .takeWhile { sum += it.value; sum >= value }
 
 
         var totalIn = 0L
         val inputs = firstIn.map {
             totalIn += it.value
-                TxInputData(it.value, it.type, it.hashData!!.txHash, it.index).toInput(privateKey)
+            TxInputData(it.value, it.type, it.hashData!!.txHash, it.index).toInput(privateKey)
 
 
         }
