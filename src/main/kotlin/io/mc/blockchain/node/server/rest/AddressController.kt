@@ -39,7 +39,7 @@ class AddressController @Autowired constructor(val addressRepository: AddressRep
     @RequestMapping(method = arrayOf(RequestMethod.PUT))
     fun addAddress(@RequestBody address: Address, response: HttpServletResponse) {
         LOG.info("Add address " + address.id)
-        if (addressRepository.exists(address.id!!)) {
+        if (addressRepository.exists(address.id)) {
             response.status = HttpServletResponse.SC_NOT_ACCEPTABLE
         } else {
             addressRepository.save(address)

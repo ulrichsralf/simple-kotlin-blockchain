@@ -1,7 +1,5 @@
 package io.mc.blockchain.node.server.rest
 
-import io.mc.blockchain.client.type
-import io.mc.blockchain.client.value
 import io.mc.blockchain.common.TxOutput
 import io.mc.blockchain.node.server.persistence.InputOutputRepository
 import io.mc.blockchain.node.server.utils.getLogger
@@ -18,8 +16,8 @@ constructor(val inputOutputRepository: InputOutputRepository) {
 
     @RequestMapping("balance/{id}")
     fun getBalance(@PathVariable("id") id: String): Map<String, Long> {
-        return inputOutputRepository.findUnspend(id).map { it.type to it.value }
-                .fold(mutableMapOf(), { map, pair -> map.apply { compute(pair.first, { k, v -> (v ?: 0) + pair.second }) } })
+        return inputOutputRepository.findUnspend(id).map { it.hashData.type to it.hashData.value }
+                .fold(mutableMapOf(), { map, pair -> map.apply { compute(pair.first, { _, v -> (v ?: 0) + pair.second }) } })
     }
 
     @RequestMapping("unspend/{id}")

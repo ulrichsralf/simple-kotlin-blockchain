@@ -59,7 +59,7 @@ object SignatureUtils {
         // do the verification
         val sig = signatureObj
         sig.initVerify(publicKeyObj)
-        sig.update(signedEntity.hash!!)
+        sig.update(signedEntity.hash)
         return sig.verify(signedEntity.signature)
     }
 

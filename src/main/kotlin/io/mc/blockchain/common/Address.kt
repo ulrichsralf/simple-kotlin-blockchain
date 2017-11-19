@@ -4,11 +4,12 @@ import java.util.*
 
 
 data class Address(
-        var id: ByteArray? = null,
-        var publicKey: ByteArray? = null) {
+        val id: ByteArray,
+        val publicKey: ByteArray) {
 
     override fun equals(other: Any?) = this === other
             || other is Address && Arrays.equals(id, other.id)
-    override fun hashCode() = id!!.hashCode()
+
+    override fun hashCode() = id.hashCode()
 
 }

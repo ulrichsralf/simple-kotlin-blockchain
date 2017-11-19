@@ -23,13 +23,13 @@ class TransactionRepository {
     }
 
     fun addNewTransaction(transaction: Transaction): Transaction? {
-        pendingMap.put(transaction.hash!!.toByteString(), transaction)
+        pendingMap.put(transaction.hash.toByteString(), transaction)
         return transaction
     }
 
     fun moveToValid(transaction: Transaction) {
-        pendingMap.remove(transaction.hash!!.toByteString())
-        validMap.put(transaction.hash!!.toByteString(),transaction)
+        pendingMap.remove(transaction.hash.toByteString())
+        validMap.put(transaction.hash.toByteString(),transaction)
     }
 
     fun isPending(id: ByteArray): Boolean {

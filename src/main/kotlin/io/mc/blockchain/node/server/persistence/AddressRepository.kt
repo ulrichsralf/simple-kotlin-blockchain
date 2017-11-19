@@ -21,7 +21,7 @@ class AddressRepository {
 
 
     fun save(address: Address) {
-        map.put(address.id!!.toByteString(), address)
+        map.put(address.id.toByteString(), address)
     }
 
     fun delete(id: ByteArray) {

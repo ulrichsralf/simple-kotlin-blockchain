@@ -6,13 +6,13 @@ import java.beans.Transient
  * ralf on 28.09.17.
  */
 interface ISignedEntity {
-    val signature: ByteArray?
-    val hash: ByteArray?
+    val signature: ByteArray
+    val hash: ByteArray
 }
 
 interface IHashedEntity {
-    val hash: ByteArray?
-    val hashData: ISignable?
+    val hash: ByteArray
+    val hashData: ISignable
 }
 
 interface ISignable {

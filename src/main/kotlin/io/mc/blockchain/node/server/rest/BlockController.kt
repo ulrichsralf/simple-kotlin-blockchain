@@ -36,7 +36,7 @@ constructor(val blockService: BlockService,
      */
     @RequestMapping(method = arrayOf(RequestMethod.PUT))
     internal fun addBlock(@RequestBody block: Block, @RequestParam(required = false) publish: Boolean?, response: HttpServletResponse) {
-        LOG.info("Add block " + block.hash!!)
+        LOG.info("Add block " + block.hash)
         val success = blockService.append(block)
 
         if (success) {

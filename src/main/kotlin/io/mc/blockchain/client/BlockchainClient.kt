@@ -22,8 +22,8 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
 
     private val restClient = Feign.builder()
-            .encoder(JacksonEncoder(listOf(JacksonConfig.getBase64Module())))
-            .decoder(JacksonDecoder(listOf(JacksonConfig.getBase64Module())))
+            .encoder(JacksonEncoder(JacksonConfig.objectMapper))
+            .decoder(JacksonDecoder(JacksonConfig.objectMapper))
             .target(Blockchain::class.java, serverNode)
     private val LOG = getLogger()
 
@@ -54,26 +54,26 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
                  to: Address,
                  comment: String) {
 
-        val txIn = restClient.getUnspend(from.id!!.toByteString())
+        val txIn = restClient.getUnspend(from.id.toByteString())
         var sum = 0L
         val firstIn = txIn
-                .filter { it.type == currency }
-                .sortedBy { it.value }
-                .takeWhile { sum += it.value; sum >= value }
+                .filter { it.hashData.type == currency }
+                .sortedBy { it.hashData.value }
+                .takeWhile { sum += it.hashData.value; sum >= value }
 
 
         var totalIn = 0L
         val inputs = firstIn.map {
-            totalIn += it.value
-            TxInputData(it.value, it.type, it.hashData!!.txHash, it.index).toInput(privateKey)
+            totalIn += it.hashData.value
+            TxInputData(it.hashData.value, it.hashData.type, it.hashData.txHash, it.hashData.index).toInput(privateKey)
 
 
         }
         val diff = totalIn - value
         if (diff < 0) throw IllegalStateException("not enough deposit")
-        val out = mutableListOf(TxOutputData(value, currency, to.id, 1).toOutput())
+        val out = mutableListOf(TxOutputData(value, currency, to.id, 1,/*TODO*/ ByteArray(0)).toOutput())
         if (diff > 0) {
-            out.add(TxOutputData(diff, currency, from.id, 2).toOutput())
+            out.add(TxOutputData(diff, currency, from.id, 2,/*TODO*/ ByteArray(0)).toOutput())
         }
 
         val payload = TransactionData(comment, from.id, inputs, out, System.currentTimeMillis())
@@ -83,7 +83,7 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
     }
 
     fun initTx(privateKey: PrivateKey, currency: String, value: Long, comment: String, to: Address) {
-        val payload = TransactionData(comment, to.id, listOf(), listOf(TxOutputData(value, currency, to.id, 1).toOutput()), System.currentTimeMillis())
+        val payload = TransactionData(comment, to.id, listOf(), listOf(TxOutputData(value, currency, to.id, 1,/*TODO*/ ByteArray(0)).toOutput()), System.currentTimeMillis())
         val id = DigestUtils.sha256(payload.getSignedBytes())
         val signature = SignatureUtils.sign(id, privateKey.encoded)
         publishTransaction(Transaction(id, signature, payload))
@@ -91,7 +91,7 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
 
 
     fun getBalance(address: Address): Map<String, Long> {
-        return restClient.getBalance(address.id!!.toByteString())
+        return restClient.getBalance(address.id.toByteString())
     }
 
     fun getAddress(id: ByteArray): Address {
@@ -108,14 +108,8 @@ class BlockchainClient(serverNode: String = "http://localhost:8080") {
     }
 }
 
-val TxInput.type: String get() = hashData!!.type!!
-val TxInput.index: Int get() = hashData!!.index!!
-val TxOutput.index: Int get() = hashData!!.index!!
-val TxOutput.type: String get() = hashData!!.type!!
-val TxInput.value: Long get() = hashData!!.value ?: 0
-val TxOutput.value: Long get() = hashData!!.value ?: 0
-
 data class TxDataKey(val tx: String, val index: Int)
+
 
 interface Blockchain {
 

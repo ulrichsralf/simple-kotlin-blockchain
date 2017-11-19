@@ -30,10 +30,10 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
     private fun containsAddress(senderId: String?, tx: Transaction): Boolean {
         val byteSenderId = senderId?.fromByteString()
         return senderId == null ||
-                Arrays.equals(tx.hashData?.senderId, byteSenderId) ||
-                tx.hashData?.outputs?.any {
-                    Arrays.equals(it.hashData?.receiverId, byteSenderId)
-                } ?: false
+                Arrays.equals(tx.hashData.senderId, byteSenderId) ||
+                tx.hashData.outputs.any {
+                    Arrays.equals(it.hashData.receiverId, byteSenderId)
+                }
     }
 
     fun getValidTransactions(senderId: String? = null): List<Transaction> {
@@ -62,19 +62,19 @@ class TransactionService @Autowired constructor(val addressRepository: AddressRe
      * @return true if all Transactions are member of the pool
      */
     fun containsAll(transactions: Collection<Transaction>): Boolean {
-        return transactions.all { transactionRepository.isPending(it.hash!!) }
+        return transactions.all { transactionRepository.isPending(it.hash) }
     }
 
     private fun verify(transaction: Transaction): Boolean {
         // correct signature
-        val sender = addressRepository.findOne(transaction.hashData!!.senderId!!)
+        val sender = addressRepository.findOne(transaction.hashData.senderId)
         if (sender == null) {
-            LOG.warn("Unknown address " + transaction.hashData!!.senderId)
+            LOG.warn("Unknown address " + transaction.hashData.senderId)
             return false
         }
 
         try {
-            if (!SignatureUtils.verify(transaction, sender.publicKey!!)) {
+            if (!SignatureUtils.verify(transaction, sender.publicKey)) {
                 LOG.warn("Invalid signature")
                 return false
             }

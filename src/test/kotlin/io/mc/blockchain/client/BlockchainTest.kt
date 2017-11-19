@@ -1,6 +1,6 @@
 package io.mc.blockchain.client
 
-import junit.framework.Assert.assertEquals
+import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
 /**
