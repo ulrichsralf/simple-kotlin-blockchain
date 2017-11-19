@@ -54,8 +54,8 @@ class BlockchainTest {
         val other = client.generateKeyPair()
         val otherAddress = client.generateAddress(other.public)
 
-        for (i in 1..100) {
-            client.transfer(keyPair.private, currency, 1, address1, otherAddress, "Here you go!")
+        for (i in 1..10) {
+            client.transfer(keyPair.private, currency, 10, address1, otherAddress, "Here you go!")
             client.await()
             assertEquals(100L, (client.getBalance(address1)[currency] ?: 0L) +
                     (client.getBalance(otherAddress)[currency] ?: 0L)
